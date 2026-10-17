@@ -1,0 +1,1179 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>キャットデレ</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="theme-color" content="#231c2b">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Klee+One:wght@400;600&display=swap">
+<style>
+/* 夜の部屋に置かれたドット絵の小窓。単一テーマで固定 */
+:root {
+  --night: #231c2b;
+  --paper: #f7ecd5;
+  --paper-2: #e6d2ad;
+  --ink: #3b2b28;
+  --ink-soft: #7a6458;
+  --tangerine: #e2783a;
+  --blush: #e5728e;
+  --hiss: #c5412f;
+  --moon: #f4e7a1;
+  --f-pixel: "DotGothic16", "Hiragino Kaku Gothic ProN", "Yu Gothic", monospace;
+  --f-hand: "Klee One", "Hiragino Mincho ProN", "Yu Mincho", serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { min-height: 100%; }
+body {
+  margin: 0;
+  background: var(--night);
+  color: var(--paper);
+  font-family: var(--f-pixel);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-tap-highlight-color: transparent;
+}
+[hidden] { display: none !important; }
+#app {
+  max-width: 520px;
+  margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 12px 24px;
+}
+.screen { display: flex; flex-direction: column; gap: 12px; }
+
+/* ドット絵風の窓とボタン */
+.win {
+  background: var(--paper);
+  color: var(--ink);
+  border: 3px solid var(--ink);
+  box-shadow: inset -3px -3px 0 var(--paper-2), 0 0 0 3px var(--night), 0 0 0 6px var(--ink-soft);
+  padding: 14px 16px;
+}
+.btn {
+  font: inherit;
+  font-size: 1rem;
+  color: var(--ink);
+  background: var(--paper);
+  border: 3px solid var(--ink);
+  box-shadow: inset -3px -3px 0 var(--paper-2), 0 4px 0 var(--ink);
+  padding: 10px 8px;
+  cursor: pointer;
+  min-height: 48px;
+  line-height: 1.3;
+}
+.btn:active { transform: translateY(4px); box-shadow: inset -3px -3px 0 var(--paper-2), 0 0 0 var(--ink); }
+.btn:focus-visible { outline: 3px solid var(--tangerine); outline-offset: 3px; }
+.btn.primary { background: var(--tangerine); color: var(--paper); box-shadow: inset -3px -3px 0 #b85a24, 0 4px 0 var(--ink); }
+.btn.ghost { background: transparent; color: var(--paper); border-color: var(--paper-2); box-shadow: 0 4px 0 var(--ink-soft); }
+.btn small { display: block; font-size: .72rem; color: var(--ink-soft); }
+.btn.primary small { color: var(--paper-2); }
+.btn:disabled { opacity: .45; cursor: default; }
+.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 10px; }
+.grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.row { display: flex; gap: 10px; flex-wrap: wrap; }
+.row > .btn { flex: 1 1 0; }
+
+/* タイトル */
+.logo { text-align: center; padding-block: 28px 8px; }
+.logo h1 { margin: 0; font-size: 2.6rem; letter-spacing: .08em; color: var(--moon); text-shadow: 3px 3px 0 var(--ink); text-wrap: balance; }
+.logo p { margin: 6px 0 0; color: var(--paper-2); letter-spacing: .12em; }
+.title-cat { width: 100%; max-width: 100%; aspect-ratio: 160 / 112; image-rendering: pixelated; border: 3px solid var(--ink); display: block; background: #000; }
+.note { font-size: .8rem; color: var(--paper-2); text-align: center; margin: 0; }
+
+/* ゲーム画面 */
+.bar { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.day { font-size: 1.3rem; color: var(--moon); font-variant-numeric: tabular-nums; }
+.day small { font-size: .85rem; color: var(--paper-2); margin-left: 2px; }
+.who { color: var(--paper-2); font-size: .9rem; }
+.bar .btn { min-height: 36px; padding: 4px 10px; font-size: .85rem; }
+.stage { position: relative; }
+#scene { width: 100%; max-width: 100%; aspect-ratio: 160 / 112; display: block; image-rendering: pixelated; border: 3px solid var(--ink); background: #000; }
+.stage.shake #scene { animation: shake .4s steps(4) 1; }
+@keyframes shake { 0%{transform:translate(0,0)} 25%{transform:translate(-6px,3px)} 50%{transform:translate(5px,-3px)} 75%{transform:translate(-3px,2px)} 100%{transform:translate(0,0)} }
+.bubble {
+  position: absolute; transform: translate(-50%, -100%);
+  background: var(--paper); color: var(--ink);
+  border: 3px solid var(--ink);
+  padding: 2px 10px; font-size: 1rem; white-space: nowrap;
+  pointer-events: none;
+}
+.bubble::after { content: ""; position: absolute; left: 50%; bottom: -9px; width: 9px; height: 9px; margin-left: -5px; background: var(--paper); border-right: 3px solid var(--ink); border-bottom: 3px solid var(--ink); transform: rotate(45deg); }
+.bubble.hiss { background: var(--hiss); color: var(--paper); font-size: 1.25rem; }
+.bubble.hiss::after { background: var(--hiss); }
+.msg { min-height: 5.2em; font-size: 1rem; }
+.msg p { margin: 0; }
+.msg p + p { margin-top: 6px; }
+.label { font-size: .78rem; letter-spacing: .1em; color: var(--paper-2); margin: 0; }
+.debug { font-size: .75rem; color: var(--paper-2); font-variant-numeric: tabular-nums; }
+
+/* 日記 */
+.diary {
+  background: var(--paper) repeating-linear-gradient(to bottom, transparent 0 1.85em, rgba(59,43,40,.13) 1.85em calc(1.85em + 1px));
+  color: var(--ink);
+  font-family: var(--f-hand);
+  line-height: 1.85;
+  border: 3px solid var(--ink);
+  padding: 0.6em 16px 1em;
+}
+.diary h2 { font-family: var(--f-pixel); font-size: .95rem; font-weight: 400; margin: 0; color: var(--ink-soft); }
+.diary p { margin: 0; }
+.log { display: flex; flex-direction: column; gap: 12px; }
+
+/* お迎え */
+.card-head { display: flex; gap: 14px; align-items: center; }
+.portrait { width: 112px; height: 96px; image-rendering: pixelated; border: 3px solid var(--ink); background: var(--paper-2); flex: none; }
+.card-head h2 { margin: 0; font-size: 1.15rem; font-weight: 400; }
+.card-head p { margin: 2px 0 0; color: var(--ink-soft); font-size: .9rem; }
+.profile { font-family: var(--f-hand); margin: 12px 0 0; padding-top: 10px; border-top: 2px dashed var(--paper-2); }
+.field { display: flex; gap: 8px; margin-top: 8px; }
+.field input {
+  flex: 1 1 auto; min-width: 0;
+  font: inherit; font-size: 1.1rem; color: var(--ink); background: #fffaf0;
+  border: 3px solid var(--ink); padding: 8px 10px;
+}
+.field input:focus-visible { outline: 3px solid var(--tangerine); outline-offset: 2px; }
+.field .btn { flex: none; min-height: 0; }
+
+/* エンディング・図鑑 */
+.end-title { margin: 0; font-size: 1.5rem; color: var(--moon); text-align: center; text-shadow: 3px 3px 0 var(--ink); text-wrap: balance; }
+.reveal dl { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 12px; margin: 10px 0 0; }
+.reveal dt { color: var(--ink-soft); }
+.reveal dd { margin: 0; }
+.zukan { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.zcard { background: var(--paper); color: var(--ink); border: 3px solid var(--ink); padding: 8px; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.zcard canvas { width: 100%; aspect-ratio: 40 / 32; image-rendering: pixelated; background: var(--paper-2); }
+.zcard b { font-weight: 400; font-size: 1rem; }
+.zcard span { font-size: .78rem; color: var(--ink-soft); }
+.matrix { overflow-x: auto; }
+.matrix table { border-collapse: collapse; font-size: .8rem; width: 100%; }
+.matrix th, .matrix td { border: 2px solid var(--paper-2); padding: 4px 6px; text-align: center; white-space: nowrap; }
+.matrix th { font-weight: 400; color: var(--ink-soft); }
+.matrix td.got { background: var(--tangerine); color: var(--paper); }
+.empty { text-align: center; color: var(--paper-2); }
+
+@media (prefers-reduced-motion: reduce) {
+  .stage.shake #scene { animation: none; }
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- タイトル -->
+  <section id="s-title" class="screen">
+    <div class="logo">
+      <h1>キャットデレ</h1>
+      <p>人見知り猫と30日</p>
+    </div>
+    <canvas id="title-cv" class="title-cat" width="160" height="112"></canvas>
+    <div class="grid" style="grid-template-columns:1fr">
+      <button id="b-continue" class="btn primary" type="button">続きから<small id="continue-info"></small></button>
+      <button id="b-new" class="btn" type="button">新しく預かる</button>
+      <button id="b-zukan" class="btn" type="button">猫図鑑</button>
+    </div>
+    <p class="note">人が苦手な保護猫を1ヶ月預かって、人に慣れさせよう。1日にできるお世話は1回だけ。</p>
+  </section>
+
+  <!-- お迎え -->
+  <section id="s-intake" class="screen" hidden>
+    <p class="label">保護団体からのプロフィールカード</p>
+    <div class="win">
+      <div class="card-head">
+        <canvas id="intake-cv" class="portrait" width="40" height="34"></canvas>
+        <div>
+          <h2 id="intake-coat"></h2>
+          <p>推定2歳・人が苦手</p>
+        </div>
+      </div>
+      <p id="intake-profile" class="profile"></p>
+    </div>
+    <div class="win">
+      <label for="cat-name">この子の名前</label>
+      <div class="field">
+        <input id="cat-name" type="text" maxlength="8" autocomplete="off">
+        <button id="b-randname" class="btn" type="button">おまかせ</button>
+      </div>
+    </div>
+    <div class="row">
+      <button id="b-intake-back" class="btn ghost" type="button">もどる</button>
+      <button id="b-adopt" class="btn primary" type="button">預かる</button>
+    </div>
+  </section>
+
+  <!-- ゲーム -->
+  <section id="s-game" class="screen" hidden>
+    <div class="bar">
+      <div><span class="day" id="g-day"></span> <span class="who" id="g-who"></span></div>
+      <div class="row" style="flex-wrap:nowrap">
+        <button id="b-log" class="btn" type="button">日記</button>
+        <button id="b-quit" class="btn" type="button">中断</button>
+      </div>
+    </div>
+    <div class="stage" id="stage">
+      <canvas id="scene" width="160" height="112"></canvas>
+      <div id="bubble" class="bubble" hidden></div>
+    </div>
+    <div id="g-msg" class="win msg"></div>
+    <div id="g-ctrl"></div>
+    <p id="g-debug" class="debug" hidden></p>
+  </section>
+
+  <!-- 日記の読み返し -->
+  <section id="s-log" class="screen" hidden>
+    <div class="bar"><span class="day">飼育日記</span><button id="b-log-close" class="btn" type="button">とじる</button></div>
+    <div id="log-list" class="log"></div>
+  </section>
+
+  <!-- エンディング -->
+  <section id="s-end" class="screen" hidden>
+    <p class="label" style="text-align:center">30日目の夜</p>
+    <h2 id="e-title" class="end-title"></h2>
+    <canvas id="end-cv" class="title-cat" width="160" height="112"></canvas>
+    <div class="win"><p id="e-text" style="margin:0"></p></div>
+    <div class="win reveal">
+      <p style="margin:0" id="e-pers"></p>
+      <dl id="e-prefs"></dl>
+    </div>
+    <div class="row">
+      <button id="b-end-zukan" class="btn" type="button">猫図鑑</button>
+      <button id="b-end-title" class="btn primary" type="button">タイトルへ</button>
+    </div>
+  </section>
+
+  <!-- 図鑑 -->
+  <section id="s-zukan" class="screen" hidden>
+    <div class="bar"><span class="day">猫図鑑</span><button id="b-zukan-close" class="btn" type="button">とじる</button></div>
+    <div class="win matrix"><table id="z-matrix"></table></div>
+    <div id="z-list" class="zukan"></div>
+  </section>
+
+</div>
+<script>
+'use strict';
+
+// ==LOGIC== ゲームの数値とルール（DOMに触らない部分）
+const DAYS = 30;
+
+const MOODS = {
+  good:     { label: 'ご機嫌',   mod: 10 },
+  normal:   { label: 'ふつう',   mod: 0 },
+  restless: { label: 'そわそわ', mod: -5 },
+  bad:      { label: '不機嫌',   mod: -15 },
+};
+const MOOD_ORDER = ['good', 'normal', 'restless', 'bad'];
+
+// prefs: 2=大好き 1=好き -1=嫌い。above は「上から撫でる」全般への好み
+const PERSONALITIES = {
+  shy: {
+    label: '臆病', growth: 0.8, mood: [1, 3, 4, 2], request: 0.3, warnOnFail: 1,
+    prefs: { leave: 2, treat: 1, pet_cheek: 1, guitar: -1, hug: -1, above: -1 },
+    desc: '臆病な子。大きな音や、上から伸びてくる手がとにかく怖い。急がずに見守るのがいちばんの近道。',
+    profile: ['保護されたときは、押し入れから三日間出てきませんでした。物音にとても敏感です。',
+              '大きな音がすると隠れて、しばらく出てきません。'],
+  },
+  tsun: {
+    label: 'ツンデレ', growth: 1, mood: [2, 3, 2, 3], request: 0.45, warnOnFail: 1,
+    prefs: { leave: 2, pet_chin: 2, brush: 1, toy: -1, pet_belly: -1 },
+    desc: 'ツンデレな子。かまわれすぎるのは嫌いだけど、心を許すと自分から甘えに来る。',
+    profile: ['近づくと離れていきますが、気がつくとこちらを見ています。',
+              '触ろうとすると怒りますが、人のいる部屋からは出ていきません。'],
+  },
+  glutton: {
+    label: '食いしん坊', growth: 1, mood: [3, 2, 1, 3], request: 0.3, warnOnFail: 1,
+    prefs: { treat: 2, pet_head: 1, pet_back: 1, brush: -1 },
+    desc: '食いしん坊な子。おいしいものをくれる人は、いい人。機嫌の浮き沈みが激しい。',
+    profile: ['ごはんの時間だけは、ケージの前まで出てきます。',
+              'ごはんはいつも完食。おかわりを待っているような顔をします。'],
+  },
+  play: {
+    label: '遊び好き', growth: 1, mood: [3, 4, 2, 1], request: 0.3, warnOnFail: 1,
+    prefs: { toy: 2, guitar: 1, pet_tail: 1, leave: -1 },
+    desc: '遊び好きな子。退屈がいちばんの敵。遊んでくれる人には心を開く。',
+    profile: ['人が寝静まると、ひとりで走り回っている音がします。',
+              '動くものに目がありません。ただ、人の手は怖いようです。'],
+  },
+  needy: {
+    label: '甘えん坊', growth: 1.3, mood: [3, 4, 2, 1], request: 0.3, warnOnFail: 2,
+    prefs: { brush: 2, guitar: 2, pet_head: 1, hug: 1, above: -1 },
+    desc: '甘えん坊な子。昔は人と暮らしていた。思い出せば早いけれど、怖い思いをすると心を閉ざしやすい。',
+    profile: ['以前は人に飼われていたようです。外で暮らすうちに、人を避けるようになりました。',
+              '首輪の跡がありました。人のことを思い出せれば、きっと甘えん坊です。'],
+  },
+};
+const PERS_ORDER = ['shy', 'tsun', 'glutton', 'play', 'needy'];
+
+const ACTIONS = {
+  leave:  { label: 'そっと見守る',   req: 0,  gain: 1 },
+  treat:  { label: 'おやつ',         req: 10, gain: 2 },
+  toy:    { label: 'おもちゃ',       req: 20, gain: 3 },
+  guitar: { label: 'ギター弾き語り', req: 25, gain: 3 },
+  brush:  { label: 'ブラッシング',   req: 50, gain: 4 },
+  hug:    { label: '抱っこ',         req: 75, gain: 6 },
+};
+const PARTS = {
+  cheek: { label: 'ほっぺ',         req: 30, gain: 3 },
+  chin:  { label: 'あご',           req: 30, gain: 3 },
+  head:  { label: '頭',             req: 35, gain: 3 },
+  back:  { label: '背中',           req: 45, gain: 4 },
+  tail:  { label: 'しっぽの付け根', req: 55, gain: 4 },
+  belly: { label: 'お腹',           req: 80, gain: 5 },
+};
+const PREF_FX = { 2: { pct: 0.15, mul: 2 }, 1: { pct: 0.05, mul: 1.5 }, 0: { pct: 0, mul: 1 }, '-1': { pct: -0.2, mul: 0.5 } };
+
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const prefKey = act => act.type === 'pet' ? 'pet_' + act.part : act.type;
+
+function prefOf(pers, act) {
+  const prefs = PERSONALITIES[pers].prefs;
+  let v = prefs[prefKey(act)] || 0;
+  if (act.type === 'pet' && act.above) v += prefs.above || 0;
+  return clamp(v, -1, 2);
+}
+const reqOf  = act => act.type === 'pet' ? PARTS[act.part].req + (act.above ? 10 : 0) : ACTIONS[act.type].req;
+const gainOf = act => act.type === 'pet' ? PARTS[act.part].gain : ACTIONS[act.type].gain;
+
+function stageOf(trust, warn) {
+  const s = trust < 20 ? 0 : trust < 40 ? 1 : trust < 60 ? 2 : trust < 80 ? 3 : 4;
+  return warn >= 2 ? Math.max(0, s - 1) : s;
+}
+
+function pickMood(pers, rnd) {
+  const w = PERSONALITIES[pers].mood, sum = w.reduce((a, b) => a + b, 0);
+  let r = rnd() * sum;
+  for (let i = 0; i < w.length; i++) { r -= w[i]; if (r < 0) return MOOD_ORDER[i]; }
+  return 'normal';
+}
+
+function rollRequest(s, rnd) {
+  if (s.trust < 60 || rnd() >= PERSONALITIES[s.pers].request) return null;
+  const prefs = PERSONALITIES[s.pers].prefs;
+  const kinds = ['pet', 'toy', 'treat'].filter(k => prefs[k] !== -1);
+  if (s.trust >= 80 && prefs.hug !== -1) kinds.push('hug');
+  return kinds[Math.floor(rnd() * kinds.length)];
+}
+const answersRequest = (req, act) => !!req && (req === 'pet' ? act.type === 'pet' : act.type === req);
+
+// 1日の行動の結果を決める（状態は変えない）
+function resolve(s, act, rnd) {
+  const P = PERSONALITIES[s.pers];
+  const pref = prefOf(s.pers, act);
+  const fx = PREF_FX[pref];
+  const req = reqOf(act);
+  const eff = s.trust - s.warn * 15 + MOODS[s.mood].mod;
+  const p = clamp(0.5 + (eff - req) * 0.025 + fx.pct, 0.05, 0.95);
+  const stage = stageOf(s.trust, s.warn);
+  const r = { act, pref, req, eff, p, stage, ok: true, delta: 0, warnAdd: 0, kind: 'ok' };
+  if (act.type === 'leave') {
+    if (s.request) { r.sulk = true; r.delta = -1; r.kind = 'sulk'; return r; }
+    r.delta = Math.max(1, Math.round(gainOf(act) * fx.mul * P.growth));
+    return r;
+  }
+  if (answersRequest(s.request, act)) {
+    r.answered = true;
+    r.delta = Math.max(1, Math.round(gainOf(act) * fx.mul * P.growth * 2));
+    return r;
+  }
+  r.ok = rnd() < p;
+  if (r.ok) {
+    r.delta = Math.max(1, Math.round(gainOf(act) * fx.mul * P.growth));
+    return r;
+  }
+  const shortfall = Math.max(0, req - eff);
+  const punch = (shortfall >= 15 || pref < 0 || act.type === 'hug') && stage > 0 && act.type !== 'guitar';
+  r.kind = punch ? 'punch' : 'hiss';
+  r.delta = -clamp(Math.round(2 + shortfall / 4), 2, 8);
+  r.warnAdd = P.warnOnFail + (punch ? 1 : 0);
+  return r;
+}
+
+function applyResult(s, r) {
+  s.trust = clamp(s.trust + r.delta, 0, 100);
+  s.warn = Math.min(3, s.warn + r.warnAdd);
+}
+
+// 夜：失敗しなかった日は警戒が1下がる。見守った日はさらに1下がる
+function nightDecay(s, r) {
+  if (r.ok) s.warn = Math.max(0, s.warn - 1);
+  if (r.act.type === 'leave') s.warn = Math.max(0, s.warn - 1);
+}
+
+const ENDINGS = [
+  { min: 90, id: 'lap',    title: '膝の上で眠る子',         short: '膝の上' },
+  { min: 70, id: 'near',   title: 'そばでくつろぐ子',       short: 'そば' },
+  { min: 45, id: 'room',   title: '同じ部屋で過ごせる子',   short: '同じ部屋' },
+  { min: 20, id: 'peek',   title: '少しだけ心を開いた子',   short: '少しだけ' },
+  { min: 0,  id: 'guard',  title: '最後まで警戒していた子', short: '警戒' },
+];
+const endingOf = trust => ENDINGS.find(e => trust >= e.min);
+// ==/LOGIC==
+
+/* ---------- ドット絵 ---------- */
+const COATS = {
+  chatora:  { label: '茶トラ',   b: '#e39a4f', s: '#b8652c', w: '#f7e3c4', stripes: true },
+  kijitora: { label: 'キジトラ', b: '#8f7656', s: '#4a3b2c', w: '#b9a585', stripes: true },
+  kuro:     { label: '黒猫',     b: '#3a3540', s: '#3a3540', w: '#4a4452', o: '#14111a', eye: '#e8c547' },
+  shiro:    { label: '白猫',     b: '#f4f0e8', s: '#f4f0e8', w: '#ffffff', o: '#6b6170', eye: '#7fb6e0' },
+  mike:     { label: '三毛',     b: '#f4efe6', s: '#f4efe6', w: '#fffaf2', c: '#e39a4f', d: '#3a3540', patch: true },
+  hachiware:{ label: 'ハチワレ', b: '#3a3540', s: '#3a3540', w: '#f4f0e8', o: '#14111a' },
+  sabashiro:{ label: 'サバ白',   b: '#8e9399', s: '#4e5358', w: '#f2f0ea', stripes: true },
+  gray:     { label: 'グレー',   b: '#8f97a6', s: '#8f97a6', w: '#a9b1be', eye: '#e8c547' },
+};
+const COAT_ORDER = Object.keys(COATS);
+const coatOf = (id, seed) => Object.assign({ o: '#3a2a2a', eye: '#c8d65a', p: '#e99a9a', k: '#1b1416', seed: seed || 0 }, COATS[id]);
+
+const hash2 = (x, y, s) => { let h = (x * 374761393 + y * 668265263 + s * 2147483647) | 0; h = (h ^ (h >>> 13)) * 1274126177; return (h ^ (h >>> 16)) >>> 0; };
+
+function colorFor(ch, coat, x, y) {
+  switch (ch) {
+    case 'o': return coat.o;
+    case 'p': return coat.p;
+    case 'e': return coat.eye;
+    case 'k': return coat.k;
+    case 'w': return coat.w;
+    case 'b': case 'B': {
+      if (coat.patch) {
+        const h = hash2(Math.floor((x + 3) / 5), Math.floor((y + 1) / 4), coat.seed) % 5;
+        if (h === 0) return coat.c;
+        if (h === 1) return coat.d;
+      }
+      if (ch === 'b' && coat.stripes && (x + (y >> 1)) % 4 === 0) return coat.s;
+      return coat.b;
+    }
+    default: return ITEM_COLORS[ch] || '#ff00ff';
+  }
+}
+const ITEM_COLORS = {
+  F: '#b5653a', R: '#d9534a', Y: '#e8d36a', t: '#6b4a2e', W: '#f0e6d0', K: '#9a6a3c',
+  N: '#6b4226', G: '#d99a4e', h: '#2a1a14', r: '#e5728e', a: '#d8423a', z: '#f7ecd5', n: '#3b2b28',
+  d: '#8fc8ef', S: '#f0c8a0', s: '#c99a74',
+};
+
+// 図形を塗ってから外側に輪郭線をつける
+const grid = (w, h) => Array.from({ length: h }, () => Array(w).fill('.'));
+function put(g, x, y, c) { if (y >= 0 && y < g.length && x >= 0 && x < g[0].length) g[y][x] = c; }
+function inEll(x, y, cx, cy, rx, ry) { const dx = (x - cx) / rx, dy = (y - cy) / ry; return dx * dx + dy * dy <= 1; }
+function ell(g, cx, cy, rx, ry, c) {
+  for (let y = Math.floor(cy - ry); y <= Math.ceil(cy + ry); y++)
+    for (let x = Math.floor(cx - rx); x <= Math.ceil(cx + rx); x++)
+      if (inEll(x, y, cx, cy, rx, ry)) put(g, x, y, c);
+}
+function rect(g, x, y, w, h, c) { for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) put(g, x + i, y + j, c); }
+function tri(g, a, b, c, ch) {
+  const minX = Math.floor(Math.min(a[0], b[0], c[0])), maxX = Math.ceil(Math.max(a[0], b[0], c[0]));
+  const minY = Math.floor(Math.min(a[1], b[1], c[1])), maxY = Math.ceil(Math.max(a[1], b[1], c[1]));
+  const sgn = (p, q, r) => (p[0] - r[0]) * (q[1] - r[1]) - (q[0] - r[0]) * (p[1] - r[1]);
+  for (let y = minY; y <= maxY; y++) for (let x = minX; x <= maxX; x++) {
+    const p = [x, y], d1 = sgn(p, a, b), d2 = sgn(p, b, c), d3 = sgn(p, c, a);
+    const neg = d1 < 0 || d2 < 0 || d3 < 0, pos = d1 > 0 || d2 > 0 || d3 > 0;
+    if (!(neg && pos)) put(g, x, y, ch);
+  }
+}
+// 楕円の外側で、すでに塗られている隣のマスに線を引く（あごの線など）
+function seam(g, cx, cy, rx, ry, filter) {
+  const marks = [];
+  for (let y = 0; y < g.length; y++) for (let x = 0; x < g[0].length; x++) {
+    if (inEll(x, y, cx, cy, rx, ry) || g[y][x] === '.' || !filter(x, y)) continue;
+    if (inEll(x, y - 1, cx, cy, rx, ry) || inEll(x - 1, y, cx, cy, rx, ry) || inEll(x + 1, y, cx, cy, rx, ry)) marks.push([x, y]);
+  }
+  marks.forEach(([x, y]) => put(g, x, y, 'o'));
+}
+function outline(g) {
+  const h = g.length, w = g[0].length, out = g.map(r => r.slice());
+  const filled = (x, y) => x >= 0 && y >= 0 && x < w && y < h && g[y][x] !== '.';
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++)
+    if (g[y][x] === '.' && (filled(x - 1, y) || filled(x + 1, y) || filled(x, y - 1) || filled(x, y + 1))) out[y][x] = 'o';
+  return out;
+}
+
+function headFront(g, cx, cy, expr) {
+  const angry = expr === 'angry';
+  if (angry) {
+    tri(g, [cx - 8, cy - 3], [cx - 3, cy - 4], [cx - 5, cy], 'B');
+    tri(g, [cx + 8, cy - 3], [cx + 3, cy - 4], [cx + 5, cy], 'B');
+  } else {
+    tri(g, [cx - 6, cy - 1], [cx - 5, cy - 7], [cx - 1, cy - 4], 'B');
+    tri(g, [cx + 6, cy - 1], [cx + 5, cy - 7], [cx + 1, cy - 4], 'B');
+  }
+  ell(g, cx, cy, 6.4, 4.6, 'B');
+  if (!angry) { put(g, cx - 4, cy - 5, 'p'); put(g, cx + 4, cy - 5, 'p'); }
+  ell(g, cx, cy + 2, 2.6, 1.6, 'w');
+  for (const side of [-1, 1]) {
+    const o = cx + side * 4, m = cx + side * 3, i = cx + side * 2;
+    if (expr === 'open') { put(g, o, cy - 1, 'e'); put(g, m, cy - 1, 'k'); put(g, i, cy - 1, 'e'); put(g, o, cy, 'e'); put(g, m, cy, 'k'); put(g, i, cy, 'e'); }
+    else if (expr === 'half') { put(g, o, cy - 1, 'o'); put(g, m, cy - 1, 'o'); put(g, i, cy - 1, 'o'); put(g, o, cy, 'e'); put(g, m, cy, 'k'); put(g, i, cy, 'e'); }
+    else if (expr === 'closed') { put(g, o, cy, 'o'); put(g, m, cy, 'o'); put(g, i, cy, 'o'); }
+    else if (expr === 'happy') { put(g, o, cy, 'o'); put(g, m, cy - 1, 'o'); put(g, i, cy, 'o'); }
+    else if (expr === 'angry') { put(g, o, cy - 1, 'e'); put(g, m, cy - 1, 'o'); put(g, i, cy - 1, 'o'); put(g, o, cy, 'e'); put(g, m, cy, 'k'); put(g, i, cy, 'k'); put(g, cx + side * 5, cy - 2, 'o'); }
+  }
+  put(g, cx, cy + 1, 'p');
+  if (angry) { put(g, cx - 1, cy + 2, 'o'); put(g, cx, cy + 2, 'k'); put(g, cx + 1, cy + 2, 'o'); put(g, cx, cy + 3, 'p'); }
+  else { put(g, cx - 1, cy + 2, 'o'); put(g, cx + 1, cy + 2, 'o'); }
+  seam(g, cx, cy, 6.4, 4.6, (x, y) => y > cy + 2);
+}
+
+const SPRITES = {};
+function sprite(name) {
+  if (SPRITES[name]) return SPRITES[name];
+  const [pose, expr] = name.split(':');
+  let g;
+  if (pose === 'sit' || pose === 'hiss') {
+    g = grid(26, 26); const cx = 12;
+    if (pose === 'hiss') { rect(g, 19, 3, 3, 15, 'b'); ell(g, 20, 6, 2.4, 3.5, 'b'); }
+    ell(g, cx, 19, 7.2, 5.2, 'b');
+    ell(g, cx, 15, 5.2, 5.6, 'b');
+    ell(g, cx, 15, 2.8, 3.4, 'w');
+    for (let y = 19; y <= 23; y++) put(g, cx, y, 'o');
+    for (let y = 20; y <= 23; y++) { put(g, cx - 4, y, 'o'); put(g, cx + 4, y, 'o'); }
+    rect(g, cx - 3, 23, 3, 2, 'w'); rect(g, cx + 1, 23, 3, 2, 'w');
+    if (pose === 'sit') { rect(g, cx + 5, 23, 6, 2, 'b'); rect(g, cx + 9, 19, 2, 5, 'b'); }
+    headFront(g, cx, 9, pose === 'hiss' ? 'angry' : expr);
+  } else if (pose === 'loaf') {
+    g = grid(28, 21); const cx = 13;
+    ell(g, cx, 15, 10.5, 4.8, 'b');
+    ell(g, cx, 13, 3.6, 2.4, 'w');
+    rect(g, cx - 5, 18, 3, 2, 'w'); rect(g, cx + 3, 18, 3, 2, 'w');
+    for (const x of [cx - 5, cx - 4, cx - 3, cx + 3, cx + 4, cx + 5]) put(g, x, 17, 'o');
+    rect(g, cx + 7, 18, 5, 2, 'b');
+    headFront(g, cx, 9, expr);
+  } else if (pose === 'curl') {
+    g = grid(28, 16);
+    ell(g, 12, 9, 10, 5, 'b');
+    rect(g, 4, 13, 15, 2, 'b');
+    for (let x = 5; x <= 17; x++) put(g, x, 12, 'o');
+    tri(g, [16, 8], [18, 2], [21, 6], 'B');
+    tri(g, [21, 6], [24, 3], [24.6, 9], 'B');
+    ell(g, 20, 10, 4.6, 4, 'B');
+    seam(g, 20, 10, 4.6, 4, (x) => x < 18);
+    put(g, 18, 5, 'p'); put(g, 23, 6, 'p');
+    ell(g, 23, 12, 1.6, 1.2, 'w');
+    put(g, 21, 10, 'o'); put(g, 22, 10, 'o');
+    put(g, 24, 11, 'p');
+  } else if (pose === 'hand') {
+    g = grid(14, 9);
+    ell(g, 5, 4, 4.6, 3, 'S');
+    for (let i = 0; i < 4; i++) rect(g, 9, 2 + i * 1.3 | 0, 4 - (i === 3 ? 2 : 0), 1, 'S');
+    rect(g, 2, 7, 3, 2, 'S');
+    return SPRITES[name] = { g: outline(g), w: 14, h: 9 };
+  } else if (pose === 'paw') {
+    g = grid(9, 8);
+    ell(g, 4, 4, 3.4, 3, 'w');
+    put(g, 2, 2, 'p'); put(g, 4, 1, 'p'); put(g, 6, 2, 'p'); put(g, 4, 4, 'p'); put(g, 3, 4, 'p'); put(g, 5, 4, 'p');
+  }
+  g = outline(g);
+  return SPRITES[name] = { g, w: g[0].length, h: g.length };
+}
+
+const ITEMS = {
+  treat: ['..........', '.oooooooo.', 'oFFFFFFFFo', 'oRRRRRRRRo', '.oRRRRRRo.', '..oooooo..'],
+  toy:   ['......YYY', '.....YYYY', '......YY.', '.....t...', '....t....', '...t.....', '..t......', '.t.......', 't........'],
+  brush: ['.oooooo.', 'oWWWWWWo', 'oKKKKKKo', '.ooKKoo.', '...oKo..', '...oKo..', '...oKo..', '...ooo..'],
+  guitar:['....oo....', '....NN....', '....NN....', '....NN....', '....NN....', '...oNNo...', '..oGGGGo..', '.oGGGGGGo.', '.oGGhhGGo.', '..oGGGGo..', '.oGGGGGGo.', 'oGGGGGGGGo', 'oGGGGGGGGo', '.oGGGGGGo.', '..oooooo..'],
+  heart: ['rr.rr', 'rrrrr', '.rrr.', '..r..'],
+  anger: ['.a.a.', 'aa.aa', '.....', 'aa.aa', '.a.a.'],
+  zz:    ['zzzz', '..z.', '.z..', 'zzzz'],
+  note:  ['..nn', '..n.', '..n.', 'nnn.', 'nnn.'],
+  sweat: ['.d.', 'ddd', 'ddd', '.d.'],
+};
+const HAND_COAT = { o: '#8a5a44', w: '#f0c8a0', b: '#f0c8a0', p: '#e99a9a', eye: '#000', k: '#000' };
+
+/* ---------- キャンバス ---------- */
+const W = 160, H = 112;
+const cache = new Map();
+function spriteCanvas(name, coat, flip) {
+  const key = name + '|' + (coat.label || 'x') + '|' + coat.seed + '|' + (flip ? 1 : 0);
+  if (cache.has(key)) return cache.get(key);
+  let g, w, h;
+  if (ITEMS[name]) { g = ITEMS[name].map(r => r.split('')); h = g.length; w = g[0].length; }
+  else ({ g, w, h } = sprite(name));
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  const x2 = c.getContext('2d');
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const ch = g[y][x]; if (ch === '.') continue;
+    x2.fillStyle = ch === 'S' ? '#f0c8a0' : colorFor(ch, coat, x, y);
+    x2.fillRect(flip ? w - 1 - x : x, y, 1, 1);
+  }
+  const out = { c, w, h }; cache.set(key, out); return out;
+}
+// ax=中心x, ay=下端y
+function drawSprite(ctx, name, coat, ax, ay, flip) {
+  const s = spriteCanvas(name, coat, flip);
+  ctx.drawImage(s.c, Math.round(ax - s.w / 2), Math.round(ay - s.h));
+  return s;
+}
+
+function drawRoom(ctx, tod) {
+  const R = (c, x, y, w, h) => { ctx.fillStyle = c; ctx.fillRect(x, y, w, h); };
+  R('#e9d3a8', 0, 0, W, 64);
+  for (let x = 4; x < W; x += 8) R('#e0c795', x, 0, 1, 62);
+  R('#8a5a3c', 0, 61, W, 4);
+  R('#b9814f', 0, 65, W, 47);
+  for (let y = 71; y < H; y += 7) R('#a6713f', 0, y, W, 1);
+  for (let i = 0; i < 18; i++) R('#a6713f', (i * 37 + (i % 3) * 11) % W, 65 + (i % 7) * 7, 1, 6);
+  // 窓
+  const sky = tod === 'night' ? '#26305a' : tod === 'morning' ? '#cfe8f0' : '#8fd0ef';
+  R('#7a4e33', 12, 8, 34, 36); R(sky, 14, 10, 30, 32);
+  if (tod === 'night') { R('#f4e7a1', 34, 14, 5, 5); R(sky, 36, 14, 3, 3); R('#fff', 18, 16, 1, 1); R('#fff', 24, 33, 1, 1); R('#fff', 39, 30, 1, 1); }
+  else { R('#fff', 17, 16, 8, 2); R('#fff', 19, 15, 4, 1); R('#fff', 32, 31, 8, 2); R('#fff', 34, 30, 3, 1); }
+  R('#7a4e33', 28, 10, 2, 32); R('#7a4e33', 14, 25, 30, 2);
+  R('#8a5a3c', 10, 44, 38, 3);
+  if (tod !== 'night') { ctx.fillStyle = 'rgba(255,248,220,.22)'; ctx.beginPath(); ctx.moveTo(14, 66); ctx.lineTo(44, 66); ctx.lineTo(70, 98); ctx.lineTo(30, 98); ctx.fill(); }
+  // 棚とおやつ
+  R('#8a5a3c', 106, 18, 34, 2); R('#e8b04a', 110, 10, 7, 8); R('#c2862a', 110, 10, 7, 2);
+  R('#c9e0e6', 121, 12, 6, 6); R('#9a6a3c', 121, 11, 6, 1);
+  R('#5e8a4a', 131, 8, 7, 7); R('#4a7038', 133, 6, 3, 3); R('#c96b5a', 132, 14, 5, 4);
+  // キャットタワー
+  R('#d9c29a', 68, 20, 5, 44); for (let y = 22; y < 62; y += 3) R('#c4aa7e', 68, y, 5, 1);
+  R('#8c6aa0', 60, 16, 22, 4); R('#6f5383', 60, 19, 22, 1);
+  R('#8c6aa0', 64, 40, 22, 4); R('#6f5383', 64, 43, 22, 1);
+  R('#8c6aa0', 58, 61, 30, 5); R('#6f5383', 58, 65, 30, 1);
+  // おもちゃ箱
+  R('#7a5a8c', 47, 52, 1, 9); R('#7fb6e0', 46, 50, 3, 3);
+  R('#e5728e', 40, 59, 5, 4);
+  R('#d9a441', 37, 62, 18, 11); R('#b5832c', 37, 62, 18, 2); R('#b5832c', 37, 72, 18, 1);
+  // ソファ
+  const so = '#6f8f6a', sd = '#557452', sl = '#86a780';
+  R(sd, 98, 28, 58, 20); R(sl, 98, 28, 58, 2); R(sd, 126, 30, 1, 16);
+  R(so, 96, 45, 62, 11); R(sl, 96, 45, 62, 2); R(sd, 126, 46, 1, 9);
+  R(sd, 93, 37, 7, 19); R(sd, 154, 37, 6, 19); R(sl, 93, 37, 7, 2); R(sl, 154, 37, 6, 2);
+  R('#2a1f22', 100, 56, 54, 9);
+  R('#5a3b2c', 99, 56, 3, 9); R('#5a3b2c', 152, 56, 3, 9);
+  // ラグ
+  for (let y = 80; y <= 98; y++) for (let x = 46; x <= 118; x++)
+    if (inEll(x, y, 82, 89, 35, 9)) { ctx.fillStyle = (Math.abs(y - 89) % 4 === 0) ? '#b48aa8' : '#c9a3bd'; ctx.fillRect(x, y, 1, 1); }
+}
+function drawCurtain(ctx) {
+  const R = (c, x, y, w, h) => { ctx.fillStyle = c; ctx.fillRect(x, y, w, h); };
+  R('#5a3b2e', 2, 5, 52, 2);
+  R('#c96b5a', 4, 7, 11, 66); for (let x = 6; x < 15; x += 3) R('#a9524a', x, 7, 1, 66);
+  R('#c96b5a', 43, 7, 9, 40); for (let x = 45; x < 52; x += 3) R('#a9524a', x, 7, 1, 40);
+}
+function drawLap(ctx) {
+  for (let y = 98; y < H; y++) for (let x = 60; x <= 124; x++) {
+    const a = inEll(x, y, 78, 114, 17, 13), b = inEll(x, y, 106, 114, 17, 13);
+    if (!a && !b) continue;
+    const edge = !(inEll(x, y - 1, 78, 114, 17, 13) || inEll(x, y - 1, 106, 114, 17, 13));
+    ctx.fillStyle = edge ? '#2c3f5e' : (y < 103 ? '#5b7db0' : '#4a6a9a');
+    ctx.fillRect(x, y, 1, 1);
+  }
+  ctx.fillStyle = '#3b5580'; ctx.fillRect(92, 104, 1, 8);
+}
+
+const SPOTS = {
+  1: { x: 22, y: 74 },
+  2: { x: 82, y: 92 },
+  3: { x: 42, y: 110 },
+  4: { x: 92, y: 106 },
+  near: { x: 52, y: 110 },
+};
+
+/* ---------- 文章 ---------- */
+const NAMES = ['むぎ', 'こてつ', 'あずき', 'しらたま', 'くろまめ', 'おもち', 'ちくわ', 'みかん', 'ごま', 'てん', 'ふく', 'のり', 'すず', 'きなこ'];
+const LOC_TEXT = [
+  '{n}はソファの下にいる。暗がりで目だけが光っている。',
+  '{n}はカーテンの陰で丸くなっている。',
+  '{n}はラグの真ん中で香箱座りをしている。',
+  '{n}はすぐそばで寝そべっている。',
+  '{n}は膝の上で寝ている。',
+];
+const MOOD_TEXT = {
+  hidden: { good: 'ゆっくりまばたきをした。', normal: '', restless: '物音がするたびに、目があちこちへ動く。', bad: '低い声でうなっている。' },
+  shown:  { good: 'しっぽの先がゆらゆら揺れている。', normal: '', restless: '耳があちこちを向いて落ち着かない。', bad: 'しっぽを床にパタン、パタンと打ちつけている。' },
+};
+const REQ_TEXT = {
+  pet:   '{n}が足元に来て、手に頭をこすりつけてきた。',
+  toy:   '{n}がおもちゃ箱の前に座って、こちらを振り返った。',
+  treat: '{n}がおやつの棚を見上げて「にゃあ」と鳴いた。',
+  hug:   '{n}が膝に前足をかけて、こちらを見上げている。',
+};
+const LEAVE_TEXT = [
+  '少し離れたところで本を読んで過ごした。ソファの下の目が、ときどきこちらを見ていた。',
+  '静かに過ごした。{n}はカーテンの陰で、ずっと寝息を立てていた。',
+  'そっと見守った。{n}は大きなあくびをした。',
+  '何もせずにのんびり過ごした。{n}もそばでくつろいでいる。',
+  '何もせずにのんびり過ごした。膝の上があたたかい。',
+];
+const HINTS = {
+  leave:     ['そばで静かにしていると、{n}は落ち着いているように見える。', '放っておかれるのは退屈みたいだ。何度もこっちを見ていた。'],
+  treat:     ['おやつの袋の音がすると、耳がぴくっと動く。', ''],
+  toy:       ['ねこじゃらしを片付けるとき、名残惜しそうに見ていた。', 'おもちゃを出すと、迷惑そうに目をそらす。'],
+  guitar:    ['ギターを弾いていると、耳がずっとこっちを向いていた。', 'ギターの音がすると、耳を伏せてしまう。'],
+  brush:     ['ブラシを見せると、しっぽがぴんと立つ。', 'ブラシを出したら、すぐに隠れてしまった。'],
+  hug:       ['抱っこされても、意外と嫌がらない子なのかもしれない。', '抱き上げられるのは、かなり苦手みたいだ。'],
+  pet_cheek: ['ほっぺを撫でると、顔を手に押しつけてくる。', 'ほっぺを触られるのは好きじゃないらしい。'],
+  pet_chin:  ['あごの下を撫でたとき、いちばん目が細くなった気がする。', 'あごを触られるのは好きじゃないらしい。'],
+  pet_head:  ['頭を撫でられるのは好きみたいだ。', '頭を触ると、首をすくめる。'],
+  pet_back:  ['背中を撫でると、背中を持ち上げてくる。', '背中を触ると、皮膚がぴくぴく動く。嫌なのかも。'],
+  pet_tail:  ['しっぽの付け根を撫でると、おしりを上げてくる。', 'しっぽの付け根は触らないでほしいらしい。'],
+  pet_belly: ['お腹を見せてくれた。', 'お腹を触ろうとすると、本気で怒る。'],
+  above:     ['', '上から手を出すと、びくっとする。下からの方がいいのかも。'],
+};
+const DINNER = [
+  '夜ごはんは、人がいなくなってから食べたようだ。',
+  '夜ごはんは、こちらが離れて座っていれば食べてくれた。',
+  '夜ごはんを、見ている前で食べるようになった。',
+  'ごはんの準備をしていたら、少し離れたところで待っていた。',
+  'ごはんの準備をしていたら、足元にすり寄ってきた。',
+];
+const END_TEXT = {
+  lap:   '1ヶ月がたった。{n}は今日も膝の上で寝息を立てている。引き渡しの日、里親さんの膝にもすぐに乗って、のどを鳴らしていた。',
+  near:  '{n}は、こちらが座るとすぐそばで横になるようになった。新しい家でも、きっとすぐに馴染むだろう。',
+  room:  '触られるのはまだ少し苦手。でも{n}は、人のいる部屋で眠れるようになった。その寝顔を見て、里親さんが決まった。',
+  peek:  '{n}は、ときどきカーテンの陰から顔を出すようになった。もう少し時間が必要だ。保護団体で、引き続き見守ってもらうことになった。',
+  guard: '{n}は最後まで、ソファの下から出てこなかった。でも迎えのキャリーに入る前に、一度だけこちらを振り返った。',
+};
+const PREF_LABEL = {
+  leave: 'そっと見守る', treat: 'おやつ', toy: 'おもちゃ', guitar: 'ギター弾き語り', brush: 'ブラッシング', hug: '抱っこ',
+  pet_cheek: '撫でる（ほっぺ）', pet_chin: '撫でる（あご）', pet_head: '撫でる（頭）', pet_back: '撫でる（背中）',
+  pet_tail: '撫でる（しっぽの付け根）', pet_belly: '撫でる（お腹）', above: '上から撫でる',
+};
+
+const pick = a => a[Math.floor(Math.random() * a.length)];
+const fmt = t => t.replace(/\{n\}/g, S.name);
+const actPhrase = act => ({
+  treat: 'おやつを差し出そう', toy: 'ねこじゃらしを近づけよう', guitar: 'ギターを弾き始めよう',
+  brush: 'ブラシを近づけよう', hug: '抱き上げよう',
+}[act.type] || `${act.above ? '上から' : '下から'}${PARTS[act.part].label}に手を伸ばそう`);
+
+function reactText(r) {
+  const a = r.act, st = r.stage;
+  if (a.type === 'leave') return r.sulk ? '{n}は不満そうに「にゃっ」と鳴いて、離れていった。' : LEAVE_TEXT[st];
+  if (!r.ok) {
+    if (a.type === 'guitar') return 'ギターを鳴らしたとたん、{n}が「シャー！」と威嚇した。';
+    if (r.kind === 'punch') return `${actPhrase(a)}としたら、猫パンチが飛んできた！`;
+    return st === 0 ? `${actPhrase(a)}としたら、ソファの下から「シャー！」と威嚇された。` : `${actPhrase(a)}としたら、「シャー！」と威嚇された。`;
+  }
+  const love = r.pref === 2;
+  let t;
+  switch (a.type) {
+    case 'treat': t = st <= 1 ? 'おやつを置いて離れた。しばらくすると、{n}がそっと出てきて食べていった。'
+      : love ? 'おやつの袋を開けたとたん、{n}が駆け寄ってきた！ あっという間に平らげた。' : 'おやつをあげると、{n}はおいしそうに食べた。'; break;
+    case 'toy': t = love ? '{n}がねこじゃらしに夢中で飛びついた！ 息が切れるまで遊んだ。'
+      : st <= 1 ? 'ねこじゃらしを遠くで揺らすと、{n}がじっと目で追っていた。' : 'ねこじゃらしを振ると、{n}が前足でちょいちょいと遊んだ。'; break;
+    case 'guitar': t = love ? '弾き語りに合わせて、{n}がのどを鳴らしている。'
+      : st <= 1 ? '静かに弾き語りをした。{n}は耳だけこちらに向けている。' : '弾き語りをすると、{n}はおとなしく聞いていた。'; break;
+    case 'brush': t = love ? 'ブラッシングすると、{n}はとろけるように寝転がった。' : 'ブラッシングすると、{n}は気持ちよさそうに目を細めた。'; break;
+    case 'hug': t = '抱き上げると、{n}は腕の中で力を抜いた。ゴロゴロと、のどが鳴っている。'; break;
+    default: t = `${a.above ? '上から' : '下から'}${PARTS[a.part].label}を撫でると、{n}は目を細めた。` + (love ? 'のどをゴロゴロ鳴らしている。' : '');
+  }
+  return (r.answered ? '{n}のおねだりに応えた！ ' : '') + t;
+}
+
+function morningText() {
+  if (S.request) return [REQ_TEXT[S.request]];
+  const st = stageOf(S.trust, S.warn);
+  const lines = [];
+  if (S.day === 1) lines.push('{n}がやってきた。キャリーから飛び出して、ソファの下にもぐりこんでしまった。');
+  else lines.push(LOC_TEXT[st]);
+  const mood = MOOD_TEXT[st === 0 ? 'hidden' : 'shown'][S.mood];
+  if (mood) lines.push(mood);
+  if (S.warn >= 2) lines.push('まだこちらを警戒しているようだ。');
+  return lines;
+}
+
+function diaryLines(r, stageBefore) {
+  const lines = [reactText(r)];
+  if (r.pref !== 0 && !r.sulk && Math.random() < 0.7) {
+    const prefs = PERSONALITIES[S.pers].prefs;
+    const useAbove = r.act.type === 'pet' && r.act.above && prefs.above === -1;
+    const h = HINTS[useAbove ? 'above' : prefKey(r.act)][r.pref > 0 && !useAbove ? 0 : 1];
+    if (h) lines.push(h + (r.pref === 2 ? 'いちばん喜ぶのはこれかもしれない。' : ''));
+  }
+  lines.push(DINNER[stageOf(S.trust, 0)]);
+  const after = stageOf(S.trust, S.warn);
+  if (after > stageBefore) lines.push('なんだか少し、距離が縮まった気がする。');
+  else if (after < stageBefore) lines.push('少し距離ができてしまった気がする。');
+  if (S.warn >= 2) lines.push('まだ警戒している。しばらくはそっとしておいた方がいいかもしれない。');
+  return lines;
+}
+
+/* ---------- 保存 ---------- */
+const SAVE_KEY = 'catdere.save.v1', ZUKAN_KEY = 'catdere.zukan.v1';
+const store = {
+  get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* 保存できない環境でも遊べる */ } },
+  del(k) { try { localStorage.removeItem(k); } catch (e) { /* noop */ } },
+};
+
+/* ---------- 画面と進行 ---------- */
+let S = null;          // 預かり中の猫と進行状況
+let screen = 'title';
+let anim = null;       // 反応の演出（保存しない）
+let pending = null;    // お迎え画面の抽選結果
+const $ = id => document.getElementById(id);
+const DEBUG = location.hash === '#debug';
+
+function show(id) {
+  screen = id;
+  for (const s of document.querySelectorAll('.screen')) s.hidden = s.id !== 's-' + id;
+  window.scrollTo(0, 0);
+  if (id === 'title') renderTitle();
+}
+
+function renderTitle() {
+  const sv = store.get(SAVE_KEY);
+  $('b-continue').hidden = !sv;
+  if (sv) $('continue-info').textContent = `${sv.name}・${sv.day}日目`;
+}
+
+function openIntake() {
+  pending = {
+    coat: pick(COAT_ORDER), pers: pick(PERS_ORDER), seed: Math.floor(Math.random() * 100000),
+  };
+  pending.profile = pick(PERSONALITIES[pending.pers].profile);
+  $('intake-coat').textContent = COATS[pending.coat].label;
+  $('intake-profile').textContent = pending.profile;
+  $('cat-name').value = '';
+  $('cat-name').placeholder = pick(NAMES);
+  const c = $('intake-cv'), x = c.getContext('2d');
+  x.clearRect(0, 0, c.width, c.height);
+  drawSprite(x, 'sit:half', coatOf(pending.coat, pending.seed), 20, 32);
+  show('intake');
+}
+
+function adopt() {
+  const name = ($('cat-name').value.trim() || $('cat-name').placeholder).slice(0, 8);
+  S = {
+    v: 1, name, coat: pending.coat, pers: pending.pers, seed: pending.seed, profile: pending.profile,
+    day: 1, trust: Math.floor(Math.random() * 11), warn: 0, mood: 'normal', request: null,
+    phase: 'morning', result: null, log: [], startedAt: Date.now(),
+  };
+  startMorning();
+  show('game');
+}
+
+function startMorning() {
+  S.mood = S.day === 1 ? 'restless' : pickMood(S.pers, Math.random);
+  S.request = rollRequest(S, Math.random);
+  S.phase = 'morning'; S.result = null; S.ui = 'actions';
+  S.stageMorning = stageOf(S.trust, S.warn);
+  store.set(SAVE_KEY, S);
+  renderGame();
+}
+
+function doAction(act) {
+  const r = resolve(S, act, Math.random);
+  r.text = fmt(reactText(r));
+  applyResult(S, r);
+  S.result = r; S.phase = 'after';
+  store.set(SAVE_KEY, S);
+  anim = { t0: performance.now() };
+  if (r.kind === 'punch' && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    const st = $('stage'); st.classList.remove('shake'); void st.offsetWidth; st.classList.add('shake');
+  }
+  renderGame();
+}
+
+function toNight() {
+  const r = S.result;
+  nightDecay(S, r);
+  const lines = diaryLines(r, S.stageMorning).map(fmt);
+  S.log.push({ day: S.day, lines });
+  S.phase = 'night';
+  store.set(SAVE_KEY, S);
+  renderGame();
+}
+
+function nextDay() {
+  if (S.day >= DAYS) return finish();
+  S.day++;
+  startMorning();
+}
+
+function finish() {
+  const e = endingOf(S.trust);
+  const z = store.get(ZUKAN_KEY) || [];
+  z.unshift({ name: S.name, coat: S.coat, pers: S.pers, seed: S.seed, ending: e.id, date: new Date().toISOString().slice(0, 10) });
+  store.set(ZUKAN_KEY, z);
+  store.del(SAVE_KEY);
+  const P = PERSONALITIES[S.pers];
+  $('e-title').textContent = `「${e.title}」`;
+  $('e-text').textContent = fmt(END_TEXT[e.id]);
+  $('e-pers').textContent = `${S.name}の性格は「${P.label}」。${P.desc}`;
+  const groups = [['大好き', 2], ['好き', 1], ['苦手', -1]].map(([lab, v]) => {
+    const ks = Object.keys(P.prefs).filter(k => P.prefs[k] === v).map(k => PREF_LABEL[k]);
+    return ks.length ? `<dt>${lab}</dt><dd>${ks.join('、')}</dd>` : '';
+  });
+  $('e-prefs').innerHTML = groups.join('');
+  endView = { ending: e.id, coat: coatOf(S.coat, S.seed) };
+  S = null;
+  show('end');
+}
+let endView = null;
+
+/* ---------- ゲーム画面の描画 ---------- */
+function renderGame() {
+  $('g-day').innerHTML = `${S.day}日目<small>/ ${DAYS}</small>`;
+  $('g-who').textContent = `${S.name}（${COATS[S.coat].label}）`;
+  const msg = $('g-msg'), ctrl = $('g-ctrl');
+  if (S.phase === 'morning') {
+    msg.className = 'win msg';
+    msg.innerHTML = morningText().map(t => `<p>${fmt(t)}</p>`).join('');
+    ctrl.innerHTML = '';
+    ctrl.appendChild(actionMenu());
+  } else if (S.phase === 'after') {
+    msg.className = 'win msg';
+    msg.innerHTML = `<p>${S.result.text}</p>`;
+    ctrl.innerHTML = '';
+    ctrl.appendChild(btn('夜にする', 'primary', toNight, true));
+  } else {
+    const entry = S.log[S.log.length - 1];
+    msg.className = 'diary';
+    msg.innerHTML = `<h2>${S.day}日目の飼育日記</h2>` + entry.lines.map(t => `<p>${t}</p>`).join('');
+    ctrl.innerHTML = '';
+    ctrl.appendChild(btn(S.day >= DAYS ? '1ヶ月がたった…' : '次の日へ', 'primary', nextDay, true));
+  }
+  $('g-debug').hidden = !DEBUG;
+  if (DEBUG) {
+    const r = S.result;
+    $('g-debug').textContent = `信頼度 ${S.trust} / 警戒 ${S.warn} / 機嫌 ${MOODS[S.mood].label} / 性格 ${PERSONALITIES[S.pers].label} / おねだり ${S.request || 'なし'}`
+      + (r ? ` / 前回 成功率${Math.round(r.p * 100)}% 変化${r.delta > 0 ? '+' : ''}${r.delta}` : '');
+  }
+}
+
+function btn(label, cls, fn, wide, sub) {
+  const b = document.createElement('button');
+  b.type = 'button'; b.className = 'btn' + (cls ? ' ' + cls : '');
+  b.innerHTML = label + (sub ? `<small>${sub}</small>` : '');
+  b.addEventListener('click', fn);
+  if (wide) b.style.width = '100%';
+  return b;
+}
+
+function actionMenu() {
+  const wrap = document.createElement('div');
+  if (S.ui === 'actions') {
+    wrap.className = 'grid';
+    const go = type => () => doAction({ type });
+    wrap.append(
+      btn('そっと見守る', '', go('leave')),
+      btn('撫でる', '', () => { S.ui = 'pet-dir'; renderGame(); }),
+      btn('おやつ', '', go('treat')),
+      btn('おもちゃ', '', go('toy')),
+      btn('ブラッシング', '', go('brush')),
+      btn('抱っこ', '', go('hug')),
+      btn('ギター弾き語り', '', go('guitar')),
+    );
+    wrap.lastChild.style.gridColumn = '1 / -1';
+  } else if (S.ui === 'pet-dir') {
+    wrap.className = 'grid';
+    const lab = document.createElement('p'); lab.className = 'label'; lab.style.gridColumn = '1 / -1'; lab.textContent = '撫でる：手の出し方';
+    wrap.append(lab,
+      btn('下から', '', () => { S.ui = 'pet-part'; S.above = false; renderGame(); }, false, '匂いを嗅がせてから'),
+      btn('上から', '', () => { S.ui = 'pet-part'; S.above = true; renderGame(); }, false, 'まっすぐ手を伸ばす'),
+      btn('もどる', 'ghost', () => { S.ui = 'actions'; renderGame(); }));
+    wrap.lastChild.style.gridColumn = '1 / -1';
+  } else {
+    wrap.className = 'grid three';
+    const lab = document.createElement('p'); lab.className = 'label'; lab.style.gridColumn = '1 / -1';
+    lab.textContent = `撫でる：${S.above ? '上から' : '下から'}・どこを？`;
+    wrap.append(lab);
+    for (const k of Object.keys(PARTS)) wrap.append(btn(PARTS[k].label, '', () => doAction({ type: 'pet', part: k, above: S.above })));
+    const back = btn('もどる', 'ghost', () => { S.ui = 'pet-dir'; renderGame(); });
+    back.style.gridColumn = '1 / -1';
+    wrap.append(back);
+  }
+  return wrap;
+}
+
+/* ---------- 場面の決定 ---------- */
+function idleScene(stage, mood, tod) {
+  const sleepy = tod === 'night';
+  if (stage === 0) return { eyes: mood === 'bad' ? 'angry' : 'open' };
+  if (stage === 1) return { pose: 'curl', spot: SPOTS[1], zz: true };
+  if (stage === 2) return { pose: sleepy ? 'curl' : 'loaf:' + (mood === 'good' ? 'happy' : mood === 'bad' ? 'half' : 'open'), spot: SPOTS[2], zz: sleepy };
+  if (stage === 3) return { pose: sleepy || mood === 'good' ? 'curl' : 'loaf:' + (mood === 'bad' ? 'half' : 'closed'), spot: SPOTS[3], zz: sleepy || mood === 'good' };
+  return { pose: mood === 'bad' ? 'loaf:half' : 'curl', spot: SPOTS[4], zz: mood !== 'bad' };
+}
+
+function sceneNow() {
+  if (S.phase === 'morning') {
+    const st = stageOf(S.trust, S.warn);
+    if (S.request) return { tod: 'morning', pose: 'sit:open', spot: SPOTS.near, bubble: 'にゃあ' };
+    const sc = idleScene(st, S.mood, 'morning');
+    sc.tod = 'morning';
+    if (S.mood === 'restless') sc.fx = 'sweat';
+    if (S.mood === 'bad') sc.fx = 'anger';
+    return sc;
+  }
+  if (S.phase === 'night') return Object.assign(idleScene(stageOf(S.trust, S.warn), 'normal', 'night'), { tod: 'night' });
+  // 反応
+  const r = S.result, a = r.act, st = r.stage;
+  const sc = { tod: 'day' };
+  if (a.type === 'leave') {
+    Object.assign(sc, idleScene(st, S.mood, 'day'));
+    if (r.sulk) { sc.pose = 'sit:half'; sc.spot = SPOTS.near; sc.fx = 'anger'; }
+    return sc;
+  }
+  const spot = st === 0 ? null : (a.type === 'hug' && r.ok) ? SPOTS[4] : (S.request || st >= 3) ? SPOTS.near : SPOTS[st];
+  sc.item = a.type === 'pet' ? 'hand' : a.type === 'hug' ? null : a.type;
+  sc.above = a.above;
+  if (!r.ok) {
+    sc.bubble = r.kind === 'punch' ? 'シャッ！' : 'シャー！'; sc.hiss = true;
+    if (st === 0) { sc.eyes = 'angry'; }
+    else { sc.pose = 'hiss'; sc.spot = spot; if (r.kind === 'punch') sc.paw = true; }
+    return sc;
+  }
+  sc.hearts = r.pref > 0 || r.answered || a.type === 'hug';
+  sc.bubble = { treat: 'はぐはぐ', toy: 'にゃっ！', guitar: '♪', brush: 'ゴロゴロ', hug: 'ゴロゴロ' }[a.type] || 'ゴロゴロ';
+  if (st === 0) { sc.eyes = 'happy'; return sc; }
+  sc.pose = a.type === 'treat' ? 'loaf:happy' : 'sit:happy';
+  sc.spot = spot;
+  if (st <= 1 && (a.type === 'guitar' || a.type === 'toy')) { sc.pose = 'loaf:open'; sc.hearts = r.pref > 0; }
+  return sc;
+}
+
+/* ---------- 描画ループ ---------- */
+const ctx = $('scene').getContext('2d');
+let lastDraw = 0;
+const reduce = matchMedia('(prefers-reduced-motion: reduce)');
+
+function paintScene(c, sc, coat, t) {
+  c.imageSmoothingEnabled = false;
+  drawRoom(c, sc.tod);
+  drawLap(c);
+  const bob = !reduce.matches && sc.zz && Math.floor(t / 900) % 2 === 1 ? 1 : 0;
+  let head = null;
+  if (sc.eyes) {
+    const blink = !reduce.matches && sc.eyes === 'open' && (t % 4200) < 160;
+    const col = sc.eyes === 'angry' ? '#e8584a' : coat.eye;
+    c.fillStyle = col;
+    if (sc.eyes === 'happy') { for (const x of [118, 124]) { c.fillRect(x, 60, 1, 1); c.fillRect(x + 1, 59, 1, 1); c.fillRect(x + 2, 60, 1, 1); } }
+    else if (!blink) {
+      const hgt = sc.eyes === 'angry' ? 1 : 2;
+      c.fillRect(118, 60, 3, hgt); c.fillRect(124, 60, 3, hgt);
+      if (sc.eyes === 'open') { c.fillStyle = '#1b1416'; c.fillRect(119, 60, 1, 2); c.fillRect(125, 60, 1, 2); }
+    }
+    head = { x: 122, y: 58 };
+  }
+  if (sc.item === 'guitar') drawSprite(c, 'guitar', coat, 136, 110);
+  if (sc.pose && sc.spot) {
+    const s = drawSprite(c, sc.pose, coat, sc.spot.x, sc.spot.y - bob);
+    head = { x: sc.spot.x, y: sc.spot.y - s.h };
+    if (sc.paw) drawSprite(c, 'paw', coat, sc.spot.x - 14, sc.spot.y - 12);
+  }
+  drawCurtain(c);
+  const hx = head ? head.x : 82, hy = head ? head.y : 70;
+  const target = sc.eyes ? { x: 112, y: 66 } : { x: hx - 16, y: hy + 22 };
+  if (sc.item === 'treat') drawSprite(c, 'treat', coat, sc.eyes ? 106 : hx - 12, sc.eyes ? 72 : (sc.spot ? sc.spot.y : 90));
+  if (sc.item === 'toy') drawSprite(c, 'toy', coat, target.x, target.y - (Math.floor(t / 300) % 2));
+  if (sc.item === 'brush') drawSprite(c, 'brush', coat, hx + 14, hy + 16);
+  if (sc.item === 'hand') {
+    if (sc.eyes) drawSprite(c, 'hand', HAND_COAT, 110, 66);
+    else if (sc.above) drawSprite(c, 'hand', HAND_COAT, hx + 2, hy + 4);
+    else drawSprite(c, 'hand', HAND_COAT, hx - 9, hy + 22, true);
+  }
+  if (sc.zz) { const k = Math.floor(t / 700) % 3; drawSprite(c, 'zz', coat, hx + 12 + k, hy + 2 - k * 3); }
+  if (sc.fx === 'sweat') drawSprite(c, 'sweat', coat, hx + 9, hy + 6);
+  if (sc.fx === 'anger') drawSprite(c, 'anger', coat, hx + 9, hy + 6);
+  if (sc.item === 'guitar' && !sc.hiss) { const k = Math.floor(t / 400) % 4; drawSprite(c, 'note', coat, 128 - k * 3, 92 - k * 4); }
+  if (sc.hearts) {
+    const age = anim ? t - anim.t0 : 3000;
+    for (let i = 0; i < 3; i++) {
+      const p = ((age / 1600) + i / 3) % 1;
+      if (age < 5000 || i === 0) drawSprite(c, 'heart', coat, hx - 8 + i * 8, hy + 2 - p * 14);
+    }
+  }
+  if (sc.tod === 'night') { c.fillStyle = 'rgba(14,16,46,.45)'; c.fillRect(0, 0, W, H); }
+  return head;
+}
+
+function tick(t) {
+  requestAnimationFrame(tick);
+  if (t - lastDraw < 90) return;
+  lastDraw = t;
+  if (screen === 'game' && S) {
+    const sc = sceneNow();
+    const head = paintScene(ctx, sc, coatOf(S.coat, S.seed), t);
+    const bub = $('bubble');
+    const showBub = sc.bubble && (S.phase !== 'after' || !anim || t - anim.t0 < 2600 || sc.hiss);
+    bub.hidden = !showBub;
+    if (showBub) {
+      bub.textContent = sc.bubble;
+      bub.className = 'bubble' + (sc.hiss ? ' hiss' : '');
+      const hx = head ? head.x : 82, hy = head ? head.y : 60;
+      bub.style.left = clamp(hx / W * 100, 14, 86) + '%';
+      bub.style.top = Math.max(14, hy - 6) / H * 100 + '%';
+    }
+  } else if (screen === 'title') {
+    paintScene(titleCtx, { tod: 'morning', pose: 'loaf:happy', spot: SPOTS[2], hearts: true }, coatOf(titleCoat, 7), t);
+  } else if (screen === 'end' && endView) {
+    const id = endView.ending;
+    const sc = id === 'lap' ? { pose: 'curl', spot: SPOTS[4], zz: true, hearts: true }
+      : id === 'near' ? { pose: 'curl', spot: SPOTS[3], zz: true }
+      : id === 'room' ? { pose: 'loaf:closed', spot: SPOTS[2] }
+      : id === 'peek' ? { pose: 'loaf:half', spot: SPOTS[1] }
+      : { eyes: 'open' };
+    sc.tod = 'night';
+    paintScene(endCtx, sc, endView.coat, t);
+  }
+}
+const titleCtx = $('title-cv').getContext('2d');
+const endCtx = $('end-cv').getContext('2d');
+const titleCoat = pick(COAT_ORDER);
+
+/* ---------- 日記・図鑑 ---------- */
+function openLog() {
+  const list = $('log-list');
+  list.innerHTML = S.log.length ? '' : '<p class="empty">まだ日記はありません。</p>';
+  for (const e of S.log.slice().reverse()) {
+    const d = document.createElement('div'); d.className = 'diary';
+    d.innerHTML = `<h2>${e.day}日目</h2>` + e.lines.map(t => `<p>${t}</p>`).join('');
+    list.appendChild(d);
+  }
+  show('log');
+}
+
+function openZukan() {
+  const z = store.get(ZUKAN_KEY) || [];
+  const got = new Set(z.map(e => e.pers + ':' + e.ending));
+  let html = '<tr><th></th>' + ENDINGS.map(e => `<th>${e.short}</th>`).join('') + '</tr>';
+  for (const p of PERS_ORDER) {
+    const known = z.some(e => e.pers === p);
+    html += `<tr><th>${known ? PERSONALITIES[p].label : '？？？'}</th>` + ENDINGS.map(e => got.has(p + ':' + e.id) ? '<td class="got">●</td>' : '<td>・</td>').join('') + '</tr>';
+  }
+  $('z-matrix').innerHTML = html;
+  const list = $('z-list');
+  list.innerHTML = z.length ? '' : '<p class="empty" style="grid-column:1/-1">まだ預かった猫はいません。</p>';
+  for (const e of z) {
+    const card = document.createElement('div'); card.className = 'zcard';
+    const c = document.createElement('canvas'); c.width = 40; c.height = 32;
+    const x = c.getContext('2d');
+    drawSprite(x, e.ending === 'guard' ? 'sit:half' : 'sit:happy', coatOf(e.coat, e.seed), 20, 30);
+    const end = ENDINGS.find(n => n.id === e.ending);
+    card.append(c);
+    card.insertAdjacentHTML('beforeend', `<b>${e.name}</b><span>${COATS[e.coat].label}・${PERSONALITIES[e.pers].label}</span><span>${end.title}</span><span>${e.date}</span>`);
+    list.appendChild(card);
+  }
+  show('zukan');
+}
+
+/* ---------- ボタン ---------- */
+$('b-new').addEventListener('click', openIntake);
+$('b-continue').addEventListener('click', () => { S = store.get(SAVE_KEY); if (!S) return renderTitle(); anim = null; show('game'); renderGame(); });
+$('b-zukan').addEventListener('click', openZukan);
+$('b-randname').addEventListener('click', () => { $('cat-name').value = pick(NAMES); });
+$('b-intake-back').addEventListener('click', () => show('title'));
+$('b-adopt').addEventListener('click', adopt);
+$('cat-name').addEventListener('keydown', e => { if (e.key === 'Enter') adopt(); });
+$('b-log').addEventListener('click', openLog);
+$('b-log-close').addEventListener('click', () => { show('game'); renderGame(); });
+$('b-quit').addEventListener('click', () => { S = null; show('title'); });
+$('b-end-zukan').addEventListener('click', openZukan);
+$('b-end-title').addEventListener('click', () => show('title'));
+$('b-zukan-close').addEventListener('click', () => show(S ? 'game' : 'title'));
+
+function start(data) {
+  if (data && data.S) { S = data.S; show(data.screen === 'game' ? 'game' : 'title'); if (screen === 'game') renderGame(); }
+  else show('title');
+  requestAnimationFrame(tick);
+}
+window.claude?.hot?.snapshot?.(() => ({ S, screen: screen === 'game' ? 'game' : 'title' }));
+window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
+</script>
+</body>
+</html>
