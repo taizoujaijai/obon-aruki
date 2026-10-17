@@ -1,0 +1,596 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#3d4a33">
+<title>おぼん歩き</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Zen+Maru+Gothic:wght@500;700&display=swap">
+<style>
+/* 1画面ゲーム：畳色の卓の上に黒漆のお盆。単一テーマで固定 */
+:root {
+  --table: #3d4a33;
+  --table-line: #46553a;
+  --ink: #f3efe2;
+  --ink-dim: #c9c6b3;
+  --lacquer: #1f1915;
+  --shu: #b1402c;
+  --gold: #d6b25e;
+  --water: #4f9fd6;
+  --danger: #ff6a4d;
+  --panel: rgba(24, 20, 16, .82);
+  --f-display: "Dela Gothic One", "Hiragino Kaku Gothic StdN", "Yu Gothic", sans-serif;
+  --f-body: "Zen Maru Gothic", "Hiragino Maru Gothic ProN", "Yu Gothic", sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body {
+  background: var(--table);
+  color: var(--ink);
+  font-family: var(--f-body);
+  overflow: hidden;
+  overscroll-behavior: none;
+  touch-action: none;
+  -webkit-user-select: none; user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+[hidden] { display: none !important; }
+
+/* HUD */
+#hud {
+  position: fixed; left: 0; right: 0; top: 0;
+  padding: calc(env(safe-area-inset-top, 0px) + 12px) 16px 0;
+  display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;
+  pointer-events: none;
+}
+.steps { display: flex; flex-direction: column; gap: 6px; }
+.steps-num { font-family: var(--f-display); font-size: 2.6rem; line-height: 1; font-variant-numeric: tabular-nums; }
+.steps-num small { font-size: 1.1rem; color: var(--ink-dim); margin-left: 4px; }
+.label { font-size: .72rem; letter-spacing: .12em; color: var(--ink-dim); }
+.dots { display: grid; grid-template-columns: repeat(10, 10px); gap: 4px; }
+.dots i { width: 10px; height: 10px; border-radius: 50%; background: rgba(255,255,255,.16); }
+.dots i.on { background: var(--gold); }
+.right { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
+.level { width: 64px; height: 64px; border-radius: 50%; border: 2px solid rgba(255,255,255,.35); position: relative; background: rgba(0,0,0,.18); }
+.level::before { content: ""; position: absolute; inset: 22px; border-radius: 50%; border: 1px dashed rgba(255,255,255,.4); }
+.bubble { position: absolute; left: 50%; top: 50%; width: 16px; height: 16px; margin: -8px 0 0 -8px; border-radius: 50%; background: #d8f0a8; box-shadow: 0 0 6px rgba(216,240,168,.7); }
+.spill { width: 120px; display: flex; flex-direction: column; gap: 4px; align-items: flex-end; }
+.bar { width: 100%; height: 8px; border-radius: 4px; background: rgba(255,255,255,.16); overflow: hidden; }
+.bar b { display: block; height: 100%; width: 0; background: var(--water); }
+.bar b.hot { background: var(--danger); }
+
+/* 画面（タイトル・キャリブレーション・結果） */
+.screen {
+  position: fixed; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  padding: calc(env(safe-area-inset-top, 0px) + 16px) 16px calc(env(safe-area-inset-bottom, 0px) + 16px);
+}
+.card {
+  width: 100%; max-width: 380px;
+  background: var(--panel);
+  border: 1px solid rgba(214,178,94,.35);
+  border-radius: 18px;
+  padding: 24px 20px;
+  display: flex; flex-direction: column; gap: 16px;
+  backdrop-filter: blur(4px);
+}
+h1 { font-family: var(--f-display); font-weight: 400; font-size: 2.4rem; margin: 0; letter-spacing: .04em; text-wrap: balance; color: var(--gold); }
+h2 { font-family: var(--f-display); font-weight: 400; font-size: 2rem; margin: 0; text-wrap: balance; }
+p { margin: 0; line-height: 1.7; }
+.note { font-size: .82rem; color: var(--ink-dim); }
+.diffs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.diffs input { position: absolute; opacity: 0; pointer-events: none; }
+.diffs label {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 10px 4px; border-radius: 12px; border: 1px solid rgba(255,255,255,.2);
+  cursor: pointer; font-weight: 700;
+}
+.diffs label span { font-size: .7rem; font-weight: 500; color: var(--ink-dim); text-align: center; }
+.diffs input:checked + label { border-color: var(--gold); background: rgba(214,178,94,.16); }
+.diffs input:focus-visible + label { outline: 2px solid var(--gold); outline-offset: 2px; }
+button {
+  font: inherit; font-weight: 700; font-size: 1.05rem;
+  border: 0; border-radius: 12px; padding: 14px 16px; cursor: pointer;
+  background: var(--shu); color: #fff;
+}
+button.ghost { background: transparent; border: 1px solid rgba(255,255,255,.3); color: var(--ink); font-size: .9rem; padding: 10px 14px; }
+button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.btns { display: flex; flex-direction: column; gap: 8px; }
+.count { font-family: var(--f-display); font-size: 5rem; line-height: 1; text-align: center; color: var(--gold); }
+.stats { display: grid; grid-template-columns: auto 1fr; gap: 4px 16px; font-variant-numeric: tabular-nums; }
+.stats dt { color: var(--ink-dim); }
+.stats dd { margin: 0; text-align: right; font-weight: 700; }
+.err { color: var(--danger); font-size: .88rem; }
+#debugHint {
+  position: fixed; left: 50%; transform: translateX(-50%);
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 14px);
+  background: var(--panel); padding: 8px 14px; border-radius: 999px; font-size: .8rem; color: var(--ink-dim);
+  pointer-events: none; white-space: nowrap;
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+
+<div id="hud" hidden>
+  <div class="steps">
+    <span class="label">歩数</span>
+    <div class="steps-num"><span id="stepNum">0</span><small>/ <span id="stepGoal">20</span></small></div>
+    <div class="dots" id="dots"></div>
+  </div>
+  <div class="right">
+    <div class="level" aria-label="水準器"><div class="bubble" id="bubble"></div></div>
+    <div class="spill" id="spillBox">
+      <span class="label">こぼれた水</span>
+      <div class="bar"><b id="spillBar"></b></div>
+    </div>
+  </div>
+</div>
+
+<section class="screen" id="scTitle">
+  <div class="card">
+    <h1>おぼん歩き</h1>
+    <p>スマホをお盆に見立てて持ち、上に載ったものを落とさず、こぼさずに20歩あるいてください。</p>
+    <div class="diffs" role="radiogroup" aria-label="難易度">
+      <input type="radio" name="diff" id="d-easy" value="easy" checked>
+      <label for="d-easy">かんたん<span>ボール1つ</span></label>
+      <input type="radio" name="diff" id="d-normal" value="normal">
+      <label for="d-normal">ふつう<span>水のコップ＋ボール</span></label>
+      <input type="radio" name="diff" id="d-hard" value="hard">
+      <label for="d-hard">むずかしい<span>コップ2つ＋ボール3つ</span></label>
+    </div>
+    <div class="btns">
+      <button id="btnStart">はじめる</button>
+      <button class="ghost" id="btnDebug">PCで試す（センサーなし）</button>
+    </div>
+    <p class="note">画面を上に向けて、お盆のように水平に持ってください。画面の回転はロックしておくと安定します。</p>
+    <p class="err" id="titleErr" hidden></p>
+  </div>
+</section>
+
+<section class="screen" id="scCalib" hidden>
+  <div class="card">
+    <h2>水平に構えて</h2>
+    <p>いまの持ち方を「水平」として記録します。そのまま動かさないでください。</p>
+    <div class="count" id="calibCount">3</div>
+  </div>
+</section>
+
+<section class="screen" id="scResult" hidden>
+  <div class="card">
+    <h2 id="resTitle">クリア！</h2>
+    <p id="resMsg"></p>
+    <dl class="stats" id="resStats"></dl>
+    <div class="btns">
+      <button id="btnRetry">もう一度</button>
+      <button class="ghost" id="btnBack">難易度をえらぶ</button>
+    </div>
+  </div>
+</section>
+
+<div id="debugHint" hidden>ドラッグで傾ける ／ スペースキーかダブルタップで1歩</div>
+
+<script>
+(() => {
+'use strict';
+
+// ===== 調整用パラメータ =====
+// 長さの単位はメートル。trayR はお盆の半径。
+// gScale：傾きが物体を動かす強さ（小さいほどやさしい）
+// dead：この角度（度）未満の傾きは無視（手ぶれ・歩行の揺れ対策）
+// spillThr：コップの水面がこの傾き（勾配）を超えるとこぼれ始める
+// stepKick：1歩ごとに物体へ加わる揺れ（m/s）
+const G = 9.8;
+const GOAL = 20;
+const DIFF = {
+  easy: {
+    name: 'かんたん', trayR: 0.16, gScale: 0.30, dead: 2.5, ballDamp: 1.6, spillThr: 0.30, stepKick: 0.0,
+    items: [{ type: 'ball', x: 0, y: 0, r: 0.024 }],
+  },
+  normal: {
+    name: 'ふつう', trayR: 0.15, gScale: 0.42, dead: 1.8, ballDamp: 1.1, spillThr: 0.24, stepKick: 0.012,
+    items: [{ type: 'cup', x: -0.03, y: 0.02, r: 0.036 }, { type: 'ball', x: 0.055, y: -0.03, r: 0.02 }],
+  },
+  hard: {
+    name: 'むずかしい', trayR: 0.14, gScale: 0.55, dead: 1.2, ballDamp: 0.8, spillThr: 0.20, stepKick: 0.022,
+    items: [
+      { type: 'cup', x: -0.045, y: 0.035, r: 0.032 }, { type: 'cup', x: 0.045, y: 0.035, r: 0.032 },
+      { type: 'ball', x: 0, y: -0.055, r: 0.018 }, { type: 'ball', x: -0.055, y: -0.035, r: 0.018 },
+      { type: 'ball', x: 0.055, y: -0.035, r: 0.018 },
+    ],
+  },
+};
+const CUP_MU_S = 0.05, CUP_MU_K = 0.035;     // コップの静止摩擦・動摩擦係数
+const SLOSH_W = 2 * Math.PI * 1.3, SLOSH_Z = 0.09; // 水面の揺れ（固有振動数と減衰）
+const TILT_TAU = 0.12;                        // 傾きのローパスフィルタ時定数（秒）
+const STEP_HI = 1.1, STEP_LO = 0.25, STEP_MIN_MS = 280; // 歩数検出のしきい値
+
+// ===== DOM =====
+const $ = (id) => document.getElementById(id);
+const cv = $('cv'), ctx = cv.getContext('2d');
+const scTitle = $('scTitle'), scCalib = $('scCalib'), scResult = $('scResult'), hud = $('hud');
+const dotsEl = $('dots');
+for (let i = 0; i < GOAL; i++) dotsEl.appendChild(document.createElement('i'));
+$('stepGoal').textContent = GOAL;
+
+// ===== センサー入力 =====
+const raw = { beta: 0, gamma: 0, gotOri: false, gotMotion: false };
+const base = { beta: 0, gamma: 0 };
+const det = { avg: G, f: 0, armed: true, last: 0 };
+let debug = false;
+const dbg = { tx: 0, ty: 0, drag: null };
+
+window.addEventListener('deviceorientation', (e) => {
+  if (e.beta == null || e.gamma == null) return;
+  raw.beta = e.beta; raw.gamma = e.gamma; raw.gotOri = true;
+});
+window.addEventListener('devicemotion', (e) => {
+  const a = e.accelerationIncludingGravity;
+  if (!a || a.x == null) return;
+  raw.gotMotion = true;
+  if (debug) return;
+  // 加速度の大きさから重力分（ゆっくり変わる平均）を引き、上下の揺れのピークを1歩として数える
+  const m = Math.hypot(a.x, a.y, a.z);
+  det.avg += (m - det.avg) * 0.02;
+  det.f += ((m - det.avg) - det.f) * 0.3;
+  const now = performance.now();
+  if (det.armed && det.f > STEP_HI && now - det.last > STEP_MIN_MS) {
+    det.armed = false; det.last = now;
+    onStep(Math.min(det.f / 3, 1));
+  } else if (!det.armed && det.f < STEP_LO) {
+    det.armed = true;
+  }
+});
+
+async function requestSensors() {
+  // iOS 13以降はユーザー操作の中で許可を求める必要がある
+  const reqs = [];
+  if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+    reqs.push(DeviceOrientationEvent.requestPermission());
+  }
+  if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
+    reqs.push(DeviceMotionEvent.requestPermission());
+  }
+  const res = await Promise.all(reqs);
+  return res.every((r) => r === 'granted');
+}
+
+let wakeLock = null;
+async function keepAwake() {
+  try { wakeLock = await navigator.wakeLock?.request('screen'); } catch (_) { /* 非対応でも続行 */ }
+}
+function releaseAwake() { try { wakeLock?.release(); } catch (_) {} wakeLock = null; }
+
+// ===== ゲーム状態 =====
+let state = 'title';
+let cfg = DIFF.easy, diffKey = 'easy';
+let items = [], drops = [];
+let steps = 0, spill = 0, tStart = 0, maxTilt = 0;
+const tilt = { x: 0, y: 0 }; // フィルタ後の傾き（勾配 = sin角）
+
+function setup() {
+  cfg = DIFF[diffKey];
+  items = cfg.items.map((d) => ({
+    ...d, vx: 0, vy: 0, ax: 0, ay: 0,
+    m: d.type === 'cup' ? 3 : 1,
+    wx: 0, wy: 0, wvx: 0, wvy: 0, // 水面の傾き（コップ内）
+    fall: -1,
+  }));
+  drops = []; steps = 0; spill = 0; maxTilt = 0;
+  tilt.x = tilt.y = 0;
+  $('spillBox').hidden = !items.some((it) => it.type === 'cup');
+  updateHud();
+}
+
+function show(el) { [scTitle, scCalib, scResult].forEach((s) => (s.hidden = s !== el)); }
+
+function onStep(power) {
+  if (state !== 'play') return;
+  steps++;
+  // 足を踏み出した衝撃でお盆の上が少し揺れる
+  const k = cfg.stepKick * (0.5 + power);
+  for (const it of items) {
+    if (it.fall >= 0) continue;
+    const a = Math.random() * Math.PI * 2;
+    it.vx += Math.cos(a) * k; it.vy += Math.sin(a) * k;
+    if (it.type === 'cup') { it.wvx += Math.cos(a) * k * 25; it.wvy += Math.sin(a) * k * 25; }
+  }
+  if (navigator.vibrate) { try { navigator.vibrate(15); } catch (_) {} }
+  updateHud();
+  if (steps >= GOAL) finish(true, 'こぼさずに運びきりました。');
+}
+
+function updateHud() {
+  $('stepNum').textContent = steps;
+  [...dotsEl.children].forEach((d, i) => d.classList.toggle('on', i < steps));
+  const bar = $('spillBar');
+  bar.style.width = Math.min(spill, 1) * 100 + '%';
+  bar.classList.toggle('hot', spill > 0.6);
+}
+
+// ===== 開始フロー =====
+$('btnStart').addEventListener('click', async () => {
+  debug = false; $('titleErr').hidden = true;
+  try {
+    const ok = await requestSensors();
+    if (!ok) throw new Error('denied');
+  } catch (_) {
+    $('titleErr').textContent = 'センサーの使用が許可されませんでした。ブラウザの設定で「モーションと画面の向き」へのアクセスを許可してください。';
+    $('titleErr').hidden = false; return;
+  }
+  startCalib();
+});
+$('btnDebug').addEventListener('click', () => { debug = true; startCalib(); });
+$('btnRetry').addEventListener('click', () => startCalib());
+$('btnBack').addEventListener('click', () => { state = 'title'; hud.hidden = true; $('debugHint').hidden = true; show(scTitle); });
+
+function startCalib() {
+  diffKey = document.querySelector('input[name=diff]:checked').value;
+  setup();
+  state = 'calib'; hud.hidden = false; show(scCalib);
+  $('debugHint').hidden = !debug;
+  keepAwake();
+  let n = 3, sb = 0, sg = 0, cnt = 0;
+  $('calibCount').textContent = n;
+  const sample = setInterval(() => { if (raw.gotOri) { sb += raw.beta; sg += raw.gamma; cnt++; } }, 50);
+  const tick = setInterval(() => {
+    n--;
+    if (n > 0) { $('calibCount').textContent = n; return; }
+    clearInterval(tick); clearInterval(sample);
+    if (!debug && cnt === 0) {
+      state = 'title'; hud.hidden = true; show(scTitle);
+      $('titleErr').textContent = '傾きセンサーの値が取れませんでした。HTTPSのページで開いているか確認してください（PCなら「PCで試す」を使ってください）。';
+      $('titleErr').hidden = false; releaseAwake(); return;
+    }
+    base.beta = cnt ? sb / cnt : 0; base.gamma = cnt ? sg / cnt : 0;
+    show(null); state = 'play'; tStart = performance.now();
+  }, 800);
+}
+
+function finish(clear, msg) {
+  if (state !== 'play' && state !== 'falling') return;
+  state = clear ? 'clear' : 'over';
+  releaseAwake();
+  const sec = (performance.now() - tStart) / 1000;
+  $('resTitle').textContent = clear ? 'クリア！' : 'ゲームオーバー';
+  $('resTitle').style.color = clear ? 'var(--gold)' : 'var(--danger)';
+  $('resMsg').textContent = msg;
+  const rows = [['難易度', cfg.name], ['歩数', `${steps} / ${GOAL}歩`], ['タイム', sec.toFixed(1) + '秒'], ['最大の傾き', maxTilt.toFixed(1) + '°']];
+  if (items.some((it) => it.type === 'cup')) rows.push(['こぼれた水', Math.round(Math.min(spill, 1) * 100) + '%']);
+  $('resStats').replaceChildren(...rows.flatMap(([k, v]) => {
+    const dt = document.createElement('dt'); dt.textContent = k;
+    const dd = document.createElement('dd'); dd.textContent = v;
+    return [dt, dd];
+  }));
+  setTimeout(() => show(scResult), clear ? 300 : 700);
+}
+
+// ===== PCデバッグ操作 =====
+cv.addEventListener('pointerdown', (e) => { if (debug) { dbg.drag = { x: e.clientX, y: e.clientY }; cv.setPointerCapture(e.pointerId); } });
+cv.addEventListener('pointermove', (e) => {
+  if (!debug || !dbg.drag) return;
+  const R = Math.min(innerWidth, innerHeight) * 0.4;
+  dbg.tx = Math.max(-1, Math.min(1, (e.clientX - dbg.drag.x) / R)) * 15;
+  dbg.ty = Math.max(-1, Math.min(1, (e.clientY - dbg.drag.y) / R)) * 15;
+});
+const endDrag = () => { dbg.drag = null; dbg.tx = 0; dbg.ty = 0; };
+cv.addEventListener('pointerup', endDrag);
+cv.addEventListener('pointercancel', endDrag);
+cv.addEventListener('dblclick', () => { if (debug) onStep(0.6); });
+window.addEventListener('keydown', (e) => {
+  if (!debug) return;
+  if (e.code === 'Space') { e.preventDefault(); if (!e.repeat) onStep(0.6); }
+});
+
+// ===== 物理 =====
+function targetTiltDeg() {
+  if (debug) return { gx: dbg.tx, gy: dbg.ty };
+  return { gx: raw.gamma - base.gamma, gy: raw.beta - base.beta };
+}
+
+function physics(dt) {
+  // 1) 傾き：ローパスで歩行の細かい揺れを落とし、デッドゾーンで手ぶれを無視
+  const t = targetTiltDeg();
+  const sx = Math.sin(t.gx * Math.PI / 180), sy = Math.sin(t.gy * Math.PI / 180);
+  const k = 1 - Math.exp(-dt / TILT_TAU);
+  tilt.x += (sx - tilt.x) * k; tilt.y += (sy - tilt.y) * k;
+  const mag = Math.hypot(tilt.x, tilt.y);
+  maxTilt = Math.max(maxTilt, Math.asin(Math.min(mag, 1)) * 180 / Math.PI);
+  const dead = Math.sin(cfg.dead * Math.PI / 180);
+  const eff = mag > dead ? (mag - dead) / mag : 0;
+  // お盆の面に沿った重力成分（m/s²）
+  const gx = tilt.x * eff * G * cfg.gScale, gy = tilt.y * eff * G * cfg.gScale;
+
+  for (const it of items) {
+    if (it.fall >= 0) { it.fall += dt; continue; }
+    const pvx = it.vx, pvy = it.vy;
+    if (it.type === 'ball') {
+      // 転がる球：加速度は 5/7 g sinθ、転がり抵抗は速度に比例
+      it.vx += (gx * 5 / 7 - cfg.ballDamp * it.vx) * dt;
+      it.vy += (gy * 5 / 7 - cfg.ballDamp * it.vy) * dt;
+    } else {
+      // コップ：静止摩擦を超えるまで動かず、動いたら動摩擦で減速
+      const sp = Math.hypot(it.vx, it.vy), gm = Math.hypot(gx, gy);
+      if (sp < 1e-3 && gm < CUP_MU_S * G) { it.vx = it.vy = 0; }
+      else {
+        const fx = sp > 1e-3 ? it.vx / sp : gx / (gm || 1), fy = sp > 1e-3 ? it.vy / sp : gy / (gm || 1);
+        let nvx = it.vx + (gx - CUP_MU_K * G * fx) * dt, nvy = it.vy + (gy - CUP_MU_K * G * fy) * dt;
+        if (sp > 1e-3 && nvx * it.vx + nvy * it.vy < 0 && gm < CUP_MU_S * G) { nvx = nvy = 0; }
+        it.vx = nvx; it.vy = nvy;
+      }
+    }
+    it.x += it.vx * dt; it.y += it.vy * dt;
+    it.ax = (it.vx - pvx) / dt; it.ay = (it.vy - pvy) / dt;
+
+    // コップの水面：お盆の傾き＋コップの加速に追従するばね（行き過ぎて揺り返す）
+    if (it.type === 'cup') {
+      const tx = tilt.x - it.ax / G * 3, ty = tilt.y - it.ay / G * 3;
+      it.wvx += (SLOSH_W * SLOSH_W * (tx - it.wx) - 2 * SLOSH_Z * SLOSH_W * it.wvx) * dt;
+      it.wvy += (SLOSH_W * SLOSH_W * (ty - it.wy) - 2 * SLOSH_Z * SLOSH_W * it.wvy) * dt;
+      it.wx += it.wvx * dt; it.wy += it.wvy * dt;
+      const w = Math.hypot(it.wx, it.wy);
+      if (w > cfg.spillThr) {
+        spill += (w - cfg.spillThr) * 3.5 * dt;
+        if (Math.random() < 0.5) {
+          const ux = it.wx / w, uy = it.wy / w;
+          drops.push({ x: it.x + ux * it.r, y: it.y + uy * it.r, vx: ux * 0.15 + it.vx, vy: uy * 0.15 + it.vy, life: 1 });
+        }
+      }
+    }
+  }
+
+  // 2) 物体どうしの衝突（円同士、軽く弾む）
+  for (let i = 0; i < items.length; i++) for (let j = i + 1; j < items.length; j++) {
+    const a = items[i], b = items[j];
+    if (a.fall >= 0 || b.fall >= 0) continue;
+    const dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy), md = a.r + b.r;
+    if (d >= md || d === 0) continue;
+    const nx = dx / d, ny = dy / d, ov = md - d, ms = a.m + b.m;
+    a.x -= nx * ov * b.m / ms; a.y -= ny * ov * b.m / ms;
+    b.x += nx * ov * a.m / ms; b.y += ny * ov * a.m / ms;
+    const rv = (b.vx - a.vx) * nx + (b.vy - a.vy) * ny;
+    if (rv < 0) {
+      const jimp = -(1 + 0.3) * rv / (1 / a.m + 1 / b.m);
+      a.vx -= jimp * nx / a.m; a.vy -= jimp * ny / a.m;
+      b.vx += jimp * nx / b.m; b.vy += jimp * ny / b.m;
+    }
+  }
+
+  // 3) お盆の縁から中心がはみ出したら落下
+  for (const it of items) {
+    if (it.fall < 0 && Math.hypot(it.x, it.y) > cfg.trayR) {
+      it.fall = 0;
+      if (state === 'play') {
+        state = 'falling';
+        setTimeout(() => finish(false, it.type === 'cup' ? 'コップがお盆から落ちてしまいました。' : 'ボールがお盆から転がり落ちました。'), 450);
+      }
+    }
+  }
+
+  // 4) こぼれた水滴
+  for (const d of drops) { d.x += d.vx * dt; d.y += d.vy * dt; d.vx *= 0.9; d.vy *= 0.9; d.life -= dt * 0.6; }
+  drops = drops.filter((d) => d.life > 0);
+  if (spill >= 1 && state === 'play') finish(false, '水がこぼれすぎました。');
+}
+
+// ===== 描画 =====
+let W = 0, H = 0, dpr = 1;
+function resize() {
+  dpr = Math.min(devicePixelRatio || 1, 2);
+  W = innerWidth; H = innerHeight;
+  cv.width = W * dpr; cv.height = H * dpr;
+}
+addEventListener('resize', resize); resize();
+
+function drawTable() {
+  ctx.fillStyle = '#3d4a33'; ctx.fillRect(0, 0, W, H);
+  // 畳の目
+  ctx.strokeStyle = '#46553a'; ctx.lineWidth = 1;
+  for (let y = 0; y < H; y += 6) { ctx.beginPath(); ctx.moveTo(0, y + .5); ctx.lineTo(W, y + .5); ctx.stroke(); }
+}
+
+function draw() {
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  drawTable();
+  const cx = W / 2, cy = H * 0.56;
+  const Rpx = Math.min(W * 0.46, H * 0.36);
+  const S = Rpx / cfg.trayR; // m → px
+  const tx = tilt.x, ty = tilt.y;
+
+  // お盆の影（傾きと逆側にずれる）
+  ctx.fillStyle = 'rgba(0,0,0,.35)';
+  ctx.beginPath(); ctx.arc(cx - tx * 60, cy - ty * 60 + 10, Rpx * 1.09, 0, Math.PI * 2); ctx.fill();
+  // 縁（黒漆＋金線）
+  ctx.fillStyle = '#1f1915';
+  ctx.beginPath(); ctx.arc(cx, cy, Rpx * 1.09, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = '#d6b25e'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.arc(cx, cy, Rpx * 1.075, 0, Math.PI * 2); ctx.stroke();
+  // 面（朱塗り）
+  const g = ctx.createRadialGradient(cx + tx * Rpx * .6, cy + ty * Rpx * .6, Rpx * .1, cx, cy, Rpx);
+  g.addColorStop(0, '#c4523b'); g.addColorStop(1, '#8e2f20');
+  ctx.fillStyle = g;
+  ctx.beginPath(); ctx.arc(cx, cy, Rpx, 0, Math.PI * 2); ctx.fill();
+
+  // 縁に近い物があれば危険表示
+  let danger = 0;
+  for (const it of items) if (it.fall < 0) danger = Math.max(danger, (Math.hypot(it.x, it.y) / cfg.trayR - 0.7) / 0.3);
+  if (danger > 0) {
+    ctx.strokeStyle = `rgba(255,106,77,${Math.min(danger, 1) * 0.9})`;
+    ctx.lineWidth = 6;
+    ctx.beginPath(); ctx.arc(cx, cy, Rpx - 3, 0, Math.PI * 2); ctx.stroke();
+  }
+
+  // 水滴
+  ctx.fillStyle = '#4f9fd6';
+  for (const d of drops) {
+    ctx.globalAlpha = Math.max(d.life, 0) * 0.8;
+    ctx.beginPath(); ctx.arc(cx + d.x * S, cy + d.y * S, 3, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+
+  for (const it of items) {
+    const sc = it.fall >= 0 ? Math.max(1 - it.fall * 2, 0) : 1;
+    if (sc <= 0) continue;
+    const x = cx + it.x * S, y = cy + it.y * S, r = it.r * S * sc;
+    ctx.globalAlpha = sc;
+    // 影
+    ctx.fillStyle = 'rgba(0,0,0,.3)';
+    ctx.beginPath(); ctx.arc(x - tx * 20 + 3, y - ty * 20 + 5, r, 0, Math.PI * 2); ctx.fill();
+    if (it.type === 'ball') {
+      const bg = ctx.createRadialGradient(x - r * .35, y - r * .35, r * .1, x, y, r);
+      bg.addColorStop(0, '#ffffff'); bg.addColorStop(1, '#cfc7b0');
+      ctx.fillStyle = bg;
+      ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+    } else {
+      // 湯のみ（白い縁）と水面
+      ctx.fillStyle = '#ece6d6';
+      ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#2f6f9c';
+      ctx.beginPath(); ctx.arc(x, y, r * .82, 0, Math.PI * 2); ctx.fill();
+      // 水面の傾き＝水が寄っている方向に明るい部分を描く
+      const w = Math.hypot(it.wx, it.wy), over = w > cfg.spillThr;
+      const ox = Math.max(-1, Math.min(1, it.wx / cfg.spillThr)), oy = Math.max(-1, Math.min(1, it.wy / cfg.spillThr));
+      ctx.save();
+      ctx.beginPath(); ctx.arc(x, y, r * .82, 0, Math.PI * 2); ctx.clip();
+      const wg = ctx.createRadialGradient(x + ox * r * .6, y + oy * r * .6, 0, x + ox * r * .6, y + oy * r * .6, r * 1.1);
+      wg.addColorStop(0, over ? '#bfe6ff' : '#7cc0ec'); wg.addColorStop(1, 'rgba(79,159,214,0)');
+      ctx.fillStyle = wg; ctx.fillRect(x - r, y - r, r * 2, r * 2);
+      ctx.restore();
+      if (over) {
+        ctx.strokeStyle = '#ff6a4d'; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.arc(x, y, r + 3, 0, Math.PI * 2); ctx.stroke();
+      }
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  // 水準器の泡（泡は高い側へ動く＝傾きの逆方向）
+  const bm = 24 / 0.26;
+  const bx = Math.max(-24, Math.min(24, -tx * bm)), by = Math.max(-24, Math.min(24, -ty * bm));
+  $('bubble').style.transform = `translate(${bx}px, ${by}px)`;
+}
+
+// ===== ループ =====
+let last = performance.now();
+function loop(now) {
+  let dt = Math.min((now - last) / 1000, 0.05);
+  last = now;
+  if (state === 'play' || state === 'falling') {
+    const n = 4;
+    for (let i = 0; i < n; i++) physics(dt / n);
+    updateHud();
+  }
+  draw();
+  requestAnimationFrame(loop);
+}
+setup();
+requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
