@@ -155,6 +155,9 @@ body {
 .matrix th { font-weight: 400; color: var(--ink-soft); }
 .matrix td.got { background: var(--tangerine); color: var(--paper); }
 .empty { text-align: center; color: var(--paper-2); }
+.link { font: inherit; font-size: .8rem; color: var(--paper-2); background: none; border: 0; text-decoration: underline; text-underline-offset: 3px; padding: 8px; cursor: pointer; align-self: center; }
+.link:focus-visible { outline: 3px solid var(--tangerine); outline-offset: 2px; }
+.btn.danger { background: var(--hiss); color: var(--paper); box-shadow: inset -3px -3px 0 #9a3022, 0 4px 0 var(--ink); }
 
 @media (prefers-reduced-motion: reduce) {
   .stage.shake #scene { animation: none; }
@@ -177,6 +180,15 @@ body {
       <button id="b-zukan" class="btn" type="button">猫図鑑</button>
     </div>
     <p class="note">人が苦手な保護猫を1ヶ月預かって、人に慣れさせよう。1日にできるお世話は1回だけ。</p>
+    <button id="b-reset" class="link" type="button">記録をリセット</button>
+    <div id="reset-confirm" class="win" hidden>
+      <p style="margin:0 0 12px">猫図鑑と、途中まで預かっている猫の記録をすべて消します。消した記録は元に戻せません。</p>
+      <div class="row">
+        <button id="b-reset-no" class="btn" type="button">やめる</button>
+        <button id="b-reset-yes" class="btn danger" type="button">すべて消す</button>
+      </div>
+    </div>
+    <p id="reset-done" class="note" hidden>記録を消しました。</p>
   </section>
 
   <!-- お迎え -->
@@ -1166,6 +1178,13 @@ $('b-quit').addEventListener('click', () => { S = null; show('title'); });
 $('b-end-zukan').addEventListener('click', openZukan);
 $('b-end-title').addEventListener('click', () => show('title'));
 $('b-zukan-close').addEventListener('click', () => show(S ? 'game' : 'title'));
+$('b-reset').addEventListener('click', () => { $('reset-confirm').hidden = false; $('reset-done').hidden = true; $('b-reset').hidden = true; });
+$('b-reset-no').addEventListener('click', () => { $('reset-confirm').hidden = true; $('b-reset').hidden = false; });
+$('b-reset-yes').addEventListener('click', () => {
+  store.del(SAVE_KEY); store.del(ZUKAN_KEY); S = null;
+  $('reset-confirm').hidden = true; $('b-reset').hidden = false; $('reset-done').hidden = false;
+  renderTitle();
+});
 
 function start(data) {
   if (data && data.S) { S = data.S; show(data.screen === 'game' ? 'game' : 'title'); if (screen === 'game') renderGame(); }
