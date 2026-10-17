@@ -12,15 +12,13 @@
 /* 1画面ゲーム：畳色の卓の上に黒漆のお盆。単一テーマで固定 */
 :root {
   --table: #3d4a33;
-  --table-line: #46553a;
   --ink: #f3efe2;
   --ink-dim: #c9c6b3;
-  --lacquer: #1f1915;
   --shu: #b1402c;
   --gold: #d6b25e;
-  --water: #4f9fd6;
+  --safe: #8fc46a;
   --danger: #ff6a4d;
-  --panel: rgba(24, 20, 16, .82);
+  --panel: rgba(24, 20, 16, .86);
   --f-display: "Dela Gothic One", "Hiragino Kaku Gothic StdN", "Yu Gothic", sans-serif;
   --f-body: "Zen Maru Gothic", "Hiragino Maru Gothic ProN", "Yu Gothic", sans-serif;
   color-scheme: dark;
@@ -51,16 +49,17 @@ canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
 .steps-num { font-family: var(--f-display); font-size: 2.6rem; line-height: 1; font-variant-numeric: tabular-nums; }
 .steps-num small { font-size: 1.1rem; color: var(--ink-dim); margin-left: 4px; }
 .label { font-size: .72rem; letter-spacing: .12em; color: var(--ink-dim); }
-.dots { display: grid; grid-template-columns: repeat(10, 10px); gap: 4px; }
-.dots i { width: 10px; height: 10px; border-radius: 50%; background: rgba(255,255,255,.16); }
+.dots { display: grid; grid-template-columns: repeat(10, 12px); gap: 4px; }
+.dots i { width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,.16); }
 .dots i.on { background: var(--gold); }
 .right { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
 .level { width: 64px; height: 64px; border-radius: 50%; border: 2px solid rgba(255,255,255,.35); position: relative; background: rgba(0,0,0,.18); }
 .level::before { content: ""; position: absolute; inset: 22px; border-radius: 50%; border: 1px dashed rgba(255,255,255,.4); }
 .bubble { position: absolute; left: 50%; top: 50%; width: 16px; height: 16px; margin: -8px 0 0 -8px; border-radius: 50%; background: #d8f0a8; box-shadow: 0 0 6px rgba(216,240,168,.7); }
-.spill { width: 120px; display: flex; flex-direction: column; gap: 4px; align-items: flex-end; }
+.meter { width: 120px; display: flex; flex-direction: column; gap: 4px; align-items: flex-end; }
 .bar { width: 100%; height: 8px; border-radius: 4px; background: rgba(255,255,255,.16); overflow: hidden; }
-.bar b { display: block; height: 100%; width: 0; background: var(--water); }
+.bar b { display: block; height: 100%; width: 0; background: var(--safe); }
+.bar b.warn { background: var(--gold); }
 .bar b.hot { background: var(--danger); }
 
 /* 画面（タイトル・キャリブレーション・結果） */
@@ -70,28 +69,29 @@ canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
   padding: calc(env(safe-area-inset-top, 0px) + 16px) 16px calc(env(safe-area-inset-bottom, 0px) + 16px);
 }
 .card {
-  width: 100%; max-width: 380px;
+  width: 100%; max-width: 400px; max-height: 100%;
+  overflow-y: auto; touch-action: pan-y; overscroll-behavior: contain;
   background: var(--panel);
   border: 1px solid rgba(214,178,94,.35);
   border-radius: 18px;
-  padding: 24px 20px;
-  display: flex; flex-direction: column; gap: 16px;
+  padding: 22px 18px;
+  display: flex; flex-direction: column; gap: 14px;
   backdrop-filter: blur(4px);
 }
-h1 { font-family: var(--f-display); font-weight: 400; font-size: 2.4rem; margin: 0; letter-spacing: .04em; text-wrap: balance; color: var(--gold); }
+h1 { font-family: var(--f-display); font-weight: 400; font-size: 2.2rem; margin: 0; letter-spacing: .04em; text-wrap: balance; color: var(--gold); }
 h2 { font-family: var(--f-display); font-weight: 400; font-size: 2rem; margin: 0; text-wrap: balance; }
 p { margin: 0; line-height: 1.7; }
 .note { font-size: .82rem; color: var(--ink-dim); }
-.diffs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-.diffs input { position: absolute; opacity: 0; pointer-events: none; }
-.diffs label {
-  display: flex; flex-direction: column; align-items: center; gap: 2px;
-  padding: 10px 4px; border-radius: 12px; border: 1px solid rgba(255,255,255,.2);
-  cursor: pointer; font-weight: 700;
+.picks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.picks input { position: absolute; opacity: 0; pointer-events: none; }
+.picks label {
+  display: flex; flex-direction: column; gap: 1px;
+  padding: 8px 10px; border-radius: 10px; border: 1px solid rgba(255,255,255,.2);
+  cursor: pointer; font-weight: 700; font-size: .9rem; line-height: 1.35;
 }
-.diffs label span { font-size: .7rem; font-weight: 500; color: var(--ink-dim); text-align: center; }
-.diffs input:checked + label { border-color: var(--gold); background: rgba(214,178,94,.16); }
-.diffs input:focus-visible + label { outline: 2px solid var(--gold); outline-offset: 2px; }
+.picks label span { font-size: .68rem; font-weight: 500; color: var(--ink-dim); }
+.picks input:checked + label { border-color: var(--gold); background: rgba(214,178,94,.16); }
+.picks input:focus-visible + label { outline: 2px solid var(--gold); outline-offset: 2px; }
 button {
   font: inherit; font-weight: 700; font-size: 1.05rem;
   border: 0; border-radius: 12px; padding: 14px 16px; cursor: pointer;
@@ -101,7 +101,7 @@ button.ghost { background: transparent; border: 1px solid rgba(255,255,255,.3); 
 button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 .btns { display: flex; flex-direction: column; gap: 8px; }
 .count { font-family: var(--f-display); font-size: 5rem; line-height: 1; text-align: center; color: var(--gold); }
-.stats { display: grid; grid-template-columns: auto 1fr; gap: 4px 16px; font-variant-numeric: tabular-nums; }
+.stats { display: grid; grid-template-columns: auto 1fr; gap: 4px 16px; font-variant-numeric: tabular-nums; margin: 0; }
 .stats dt { color: var(--ink-dim); }
 .stats dd { margin: 0; text-align: right; font-weight: 700; }
 .err { color: var(--danger); font-size: .88rem; }
@@ -111,7 +111,6 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
   background: var(--panel); padding: 8px 14px; border-radius: 999px; font-size: .8rem; color: var(--ink-dim);
   pointer-events: none; white-space: nowrap;
 }
-@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 </head>
 <body>
@@ -120,14 +119,14 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 <div id="hud" hidden>
   <div class="steps">
     <span class="label">歩数</span>
-    <div class="steps-num"><span id="stepNum">0</span><small>/ <span id="stepGoal">20</span></small></div>
+    <div class="steps-num"><span id="stepNum">0</span><small>/ <span id="stepGoal">10</span></small></div>
     <div class="dots" id="dots"></div>
   </div>
   <div class="right">
     <div class="level" aria-label="水準器"><div class="bubble" id="bubble"></div></div>
-    <div class="spill" id="spillBox">
-      <span class="label">こぼれた水</span>
-      <div class="bar"><b id="spillBar"></b></div>
+    <div class="meter">
+      <span class="label" id="meterLabel">あぶない度</span>
+      <div class="bar"><b id="meterBar"></b></div>
     </div>
   </div>
 </div>
@@ -135,15 +134,8 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 <section class="screen" id="scTitle">
   <div class="card">
     <h1>おぼん歩き</h1>
-    <p>スマホをお盆に見立てて持ち、上に載ったものを落とさず、こぼさずに20歩あるいてください。</p>
-    <div class="diffs" role="radiogroup" aria-label="難易度">
-      <input type="radio" name="diff" id="d-easy" value="easy" checked>
-      <label for="d-easy">かんたん<span>ボール1つ</span></label>
-      <input type="radio" name="diff" id="d-normal" value="normal">
-      <label for="d-normal">ふつう<span>水のコップ＋ボール</span></label>
-      <input type="radio" name="diff" id="d-hard" value="hard">
-      <label for="d-hard">むずかしい<span>コップ2つ＋ボール3つ</span></label>
-    </div>
+    <p>スマホをお盆に見立てて持ち、載せたものを落とさず・こぼさず・倒さずに10歩あるいてください。</p>
+    <div class="picks" id="picks" role="radiogroup" aria-label="お盆に載せるもの"></div>
     <div class="btns">
       <button id="btnStart">はじめる</button>
       <button class="ghost" id="btnDebug">PCで試す（センサーなし）</button>
@@ -168,7 +160,7 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
     <dl class="stats" id="resStats"></dl>
     <div class="btns">
       <button id="btnRetry">もう一度</button>
-      <button class="ghost" id="btnBack">難易度をえらぶ</button>
+      <button class="ghost" id="btnBack">載せるものをえらぶ</button>
     </div>
   </div>
 </section>
@@ -180,35 +172,84 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 'use strict';
 
 // ===== 調整用パラメータ =====
-// 長さの単位はメートル。trayR はお盆の半径。
-// gScale：傾きが物体を動かす強さ（小さいほどやさしい）
-// dead：この角度（度）未満の傾きは無視（手ぶれ・歩行の揺れ対策）
-// spillThr：コップの水面がこの傾き（勾配）を超えるとこぼれ始める
-// stepKick：1歩ごとに物体へ加わる揺れ（m/s）
+// 長さの単位はメートル。お盆の半径は TRAY_R。
 const G = 9.8;
-const GOAL = 20;
-const DIFF = {
-  easy: {
-    name: 'かんたん', trayR: 0.16, gScale: 0.30, dead: 2.5, ballDamp: 1.6, spillThr: 0.30, stepKick: 0.0,
-    items: [{ type: 'ball', x: 0, y: 0, r: 0.024 }],
-  },
-  normal: {
-    name: 'ふつう', trayR: 0.15, gScale: 0.42, dead: 1.8, ballDamp: 1.1, spillThr: 0.24, stepKick: 0.012,
-    items: [{ type: 'cup', x: -0.03, y: 0.02, r: 0.036 }, { type: 'ball', x: 0.055, y: -0.03, r: 0.02 }],
-  },
-  hard: {
-    name: 'むずかしい', trayR: 0.14, gScale: 0.55, dead: 1.2, ballDamp: 0.8, spillThr: 0.20, stepKick: 0.022,
+const GOAL = 10;
+const TRAY_R = 0.15;
+const TILT_TAU = 0.12;                         // 傾きのローパスフィルタ時定数（秒）
+const STEP_HI = 0.7, STEP_LO = 0.15, STEP_MIN_MS = 250; // 歩数検出のしきい値（m/s²）。小さいほど敏感
+
+// 「揺れ」の共通モデル。お盆の傾きとお盆上での加速度に、ばねのように遅れて追従する。
+//   mode: 'spill' こぼれる（しきい値を超えた状態が続くとアウト）
+//         'topple' 倒れる（しきい値を一瞬でも超えたらアウト）
+//         'wake' 起きる（しきい値を超えている間、目覚めゲージがたまる）
+//   thr: しきい値（傾きの勾配。0.1 ≒ 5.7°）  freq/zeta: 揺れの速さと減衰
+//   gain: 傾きへの反応  accG: 揺さぶりへの反応  kick: 1歩ごとの衝撃への反応
+const sway = (mode, fail, o) => ({ mode, fail, thr: 0.15, gain: 1, accG: 1.5, freq: 1.3, zeta: 0.09, kick: 1, ...o });
+
+// 載せるものの部品。move: 'roll' 転がる / 'slide' 摩擦で止まり、超えると滑る
+const ball = (x, y, r) => ({ kind: 'ball', name: 'ボール', x, y, r, m: 1, move: 'roll', damp: 1.2 });
+const obj = (kind, name, x, y, r, o) => ({ kind, name, x, y, r, m: 2, move: 'slide', mu: 0.06, ...o });
+const ring = (n, rad, r, a0 = -Math.PI / 2) => Array.from({ length: n }, (_, i) =>
+  ball(Math.cos(a0 + i / n * Math.PI * 2) * rad, Math.sin(a0 + i / n * Math.PI * 2) * rad, r));
+
+// gScale：傾きで物が動く強さ  dead：無視する傾き（度）  stepKick：1歩ごとの衝撃
+const SETS = [
+  { id: 'ball1', name: 'ボール1個', tag: '転がる', gScale: 0.35, dead: 2.2, stepKick: 0.006,
+    items: [ball(0, 0, 0.026)] },
+  { id: 'ball5', name: 'ボール5個', tag: '転がる', gScale: 0.40, dead: 2.0, stepKick: 0.008,
+    items: [ball(0, 0, 0.02), ...ring(4, 0.06, 0.02, -Math.PI / 4)] },
+  { id: 'ball10', name: 'ボール10個', tag: '転がる', gScale: 0.42, dead: 1.8, stepKick: 0.01,
+    items: [ball(0, 0, 0.016), ...ring(3, 0.042, 0.016), ...ring(6, 0.085, 0.016, -Math.PI / 3)] },
+  { id: 'books', name: '本20冊', tag: '倒れる', gScale: 0.42, dead: 1.8, stepKick: 0.012,
+    items: [obj('books', '本', 0, 0, 0.055, { m: 6, mu: 0.3,
+      sways: [sway('topple', '積んだ本が崩れました。', { thr: 0.26, freq: 0.9, zeta: 0.15, kick: 1.5 })] })] },
+  { id: 'cup', name: '水たっぷりのコップ', tag: 'こぼれる', gScale: 0.42, dead: 1.8, stepKick: 0.012,
+    items: [obj('cup', 'コップ', 0, 0, 0.036, {
+      sways: [sway('spill', '水がこぼれました。', { thr: 0.13 })] })] },
+  { id: 'wine', name: 'ワイン入りのワイングラス', tag: 'こぼれる・倒れる', gScale: 0.42, dead: 1.8, stepKick: 0.012,
+    items: [obj('wine', 'ワイングラス', 0, 0, 0.03, {
+      sways: [sway('spill', 'ワインがこぼれました。', { thr: 0.11, freq: 1.6 }),
+              sway('topple', 'ワイングラスが倒れました。', { thr: 0.32, freq: 1.8, zeta: 0.12 })] })] },
+  { id: 'champagne', name: 'シャンパンタワー', tag: 'こぼれる・倒れる', gScale: 0.42, dead: 1.6, stepKick: 0.012,
+    items: [obj('champagne', 'シャンパンタワー', 0, 0, 0.07, { m: 4, mu: 0.08,
+      sways: [sway('spill', 'シャンパンがこぼれました。', { thr: 0.15, freq: 1.5 }),
+              sway('topple', 'シャンパンタワーが崩れました。', { thr: 0.17, freq: 1.1, zeta: 0.12, kick: 1.3 })] })] },
+  { id: 'pancake', name: 'パンケーキタワー', tag: '倒れる', gScale: 0.42, dead: 1.8, stepKick: 0.012,
+    items: [obj('pancake', 'パンケーキ', 0, 0, 0.045, { mu: 0.1,
+      sways: [sway('topple', 'パンケーキタワーが倒れました。', { thr: 0.2, freq: 1.0, zeta: 0.14, kick: 1.3 })] })] },
+  { id: 'cards', name: 'トランプのピラミッド', tag: '崩れる', gScale: 0.42, dead: 1.6, stepKick: 0.012,
+    items: [obj('cards', 'トランプのピラミッド', 0, 0, 0.06, { m: 1, mu: 0.2,
+      sways: [sway('topple', 'トランプのピラミッドが崩れました。', { thr: 0.1, freq: 2.0, zeta: 0.2, kick: 2.5 })] })] },
+  { id: 'lunch', name: '学校給食', tag: 'こぼれる・倒れる', gScale: 0.42, dead: 1.8, stepKick: 0.012,
     items: [
-      { type: 'cup', x: -0.045, y: 0.035, r: 0.032 }, { type: 'cup', x: 0.045, y: 0.035, r: 0.032 },
-      { type: 'ball', x: 0, y: -0.055, r: 0.018 }, { type: 'ball', x: -0.055, y: -0.035, r: 0.018 },
-      { type: 'ball', x: 0.055, y: -0.035, r: 0.018 },
-    ],
-  },
-};
-const CUP_MU_S = 0.05, CUP_MU_K = 0.035;     // コップの静止摩擦・動摩擦係数
-const SLOSH_W = 2 * Math.PI * 1.3, SLOSH_Z = 0.09; // 水面の揺れ（固有振動数と減衰）
-const TILT_TAU = 0.12;                        // 傾きのローパスフィルタ時定数（秒）
-const STEP_HI = 1.1, STEP_LO = 0.25, STEP_MIN_MS = 280; // 歩数検出のしきい値
+      obj('soup', 'みそ汁', -0.055, 0.045, 0.032, { sways: [sway('spill', 'みそ汁がこぼれました。', { thr: 0.16 })] }),
+      obj('milk', '牛乳びん', 0.065, 0.055, 0.02, { m: 1, mu: 0.12,
+        sways: [sway('topple', '牛乳びんが倒れました。', { thr: 0.3, freq: 2.0, zeta: 0.12 })] }),
+      obj('rice', 'ごはん', -0.055, -0.045, 0.033, { mu: 0.1 }),
+      obj('plate', 'おかずのお皿', 0.045, -0.035, 0.048, { mu: 0.1 }),
+    ] },
+  { id: 'pot', name: '沸騰したお湯の鍋', tag: 'こぼれる', gScale: 0.42, dead: 1.8, stepKick: 0.012,
+    items: [obj('pot', 'お鍋', 0, 0, 0.075, { m: 5, mu: 0.12, boil: 0.15,
+      sways: [sway('spill', '熱湯がこぼれました。', { thr: 0.12, freq: 0.9, kick: 0.7 })] })] },
+  { id: 'oden', name: '熱々おでんのお椀3個', tag: 'こぼれる', gScale: 0.42, dead: 1.8, stepKick: 0.012,
+    items: [0, 1, 2].map((i) => {
+      const a = -Math.PI / 2 + i * Math.PI * 2 / 3;
+      return obj('oden', 'おでんのお椀', Math.cos(a) * 0.058, Math.sin(a) * 0.058, 0.036, { seed: i,
+        sways: [sway('spill', 'おでんのつゆがこぼれました。', { thr: 0.15 })] });
+    }) },
+  { id: 'pencils', name: '立っている鉛筆5本', tag: '倒れる', gScale: 0.42, dead: 1.6, stepKick: 0.012,
+    items: Array.from({ length: 5 }, (_, i) => {
+      const a = -Math.PI / 2 + i * Math.PI * 2 / 5;
+      return obj('pencil', '鉛筆', Math.cos(a) * 0.06, Math.sin(a) * 0.06, 0.006, { m: 0.3, mu: 0.4,
+        sways: [sway('topple', '鉛筆が倒れました。', { thr: 0.11, freq: 2.2, zeta: 0.15, kick: 1.5 })] });
+    }) },
+  { id: 'cat', name: '眠っている猫', tag: '起きる', gScale: 0.42, dead: 1.2, stepKick: 0.012,
+    items: [obj('cat', '猫', 0, 0, 0.06, { m: 6, mu: 0.35,
+      sways: [sway('wake', '猫が起きてしまいました。', { thr: 0.07, freq: 0.8, zeta: 0.5, accG: 1, kick: 0.6 })] })] },
+];
+const SPILL_TIME = 0.3; // こぼれ始めてからアウトになるまでの猶予（秒）。一瞬のノイズで終わらないように
+const WAKE_TIME = 2.5;  // しきい値を超えた状態が何秒続くと猫が起きるか
 
 // ===== DOM =====
 const $ = (id) => document.getElementById(id);
@@ -217,9 +258,17 @@ const scTitle = $('scTitle'), scCalib = $('scCalib'), scResult = $('scResult'), 
 const dotsEl = $('dots');
 for (let i = 0; i < GOAL; i++) dotsEl.appendChild(document.createElement('i'));
 $('stepGoal').textContent = GOAL;
+$('picks').append(...SETS.flatMap((s, i) => {
+  const input = document.createElement('input');
+  input.type = 'radio'; input.name = 'set'; input.id = 'set-' + s.id; input.value = s.id; input.checked = i === 0;
+  const label = document.createElement('label');
+  label.htmlFor = input.id; label.textContent = s.name;
+  const tag = document.createElement('span'); tag.textContent = s.tag; label.appendChild(tag);
+  return [input, label];
+}));
 
 // ===== センサー入力 =====
-const raw = { beta: 0, gamma: 0, gotOri: false, gotMotion: false };
+const raw = { beta: 0, gamma: 0, gotOri: false };
 const base = { beta: 0, gamma: 0 };
 const det = { avg: G, f: 0, armed: true, last: 0 };
 let debug = false;
@@ -231,9 +280,7 @@ window.addEventListener('deviceorientation', (e) => {
 });
 window.addEventListener('devicemotion', (e) => {
   const a = e.accelerationIncludingGravity;
-  if (!a || a.x == null) return;
-  raw.gotMotion = true;
-  if (debug) return;
+  if (!a || a.x == null || debug) return;
   // 加速度の大きさから重力分（ゆっくり変わる平均）を引き、上下の揺れのピークを1歩として数える
   const m = Math.hypot(a.x, a.y, a.z);
   det.avg += (m - det.avg) * 0.02;
@@ -268,22 +315,20 @@ function releaseAwake() { try { wakeLock?.release(); } catch (_) {} wakeLock = n
 
 // ===== ゲーム状態 =====
 let state = 'title';
-let cfg = DIFF.easy, diffKey = 'easy';
+let set = SETS[0];
 let items = [], drops = [];
-let steps = 0, spill = 0, tStart = 0, maxTilt = 0;
-const tilt = { x: 0, y: 0 }; // フィルタ後の傾き（勾配 = sin角）
+let steps = 0, tStart = 0, maxTilt = 0, danger = 0, clock = 0;
+const tilt = { x: 0, y: 0 };   // フィルタ後の傾き（勾配 = sin角）
+const eTilt = { x: 0, y: 0 };  // デッドゾーンを適用した傾き
 
 function setup() {
-  cfg = DIFF[diffKey];
-  items = cfg.items.map((d) => ({
-    ...d, vx: 0, vy: 0, ax: 0, ay: 0,
-    m: d.type === 'cup' ? 3 : 1,
-    wx: 0, wy: 0, wvx: 0, wvy: 0, // 水面の傾き（コップ内）
-    fall: -1,
+  items = set.items.map((d) => ({
+    ...d, vx: 0, vy: 0, ax: 0, ay: 0, fall: -1,
+    sw: (d.sways || []).map((s) => ({ ...s, x: 0, y: 0, vx: 0, vy: 0, acc: 0 })),
   }));
-  drops = []; steps = 0; spill = 0; maxTilt = 0;
-  tilt.x = tilt.y = 0;
-  $('spillBox').hidden = !items.some((it) => it.type === 'cup');
+  drops = []; steps = 0; maxTilt = 0; danger = 0;
+  tilt.x = tilt.y = eTilt.x = eTilt.y = 0;
+  $('meterLabel').textContent = set.id === 'cat' ? '猫の目覚め' : 'あぶない度';
   updateHud();
 }
 
@@ -293,24 +338,25 @@ function onStep(power) {
   if (state !== 'play') return;
   steps++;
   // 足を踏み出した衝撃でお盆の上が少し揺れる
-  const k = cfg.stepKick * (0.5 + power);
+  const k = set.stepKick * (0.5 + power);
   for (const it of items) {
     if (it.fall >= 0) continue;
-    const a = Math.random() * Math.PI * 2;
-    it.vx += Math.cos(a) * k; it.vy += Math.sin(a) * k;
-    if (it.type === 'cup') { it.wvx += Math.cos(a) * k * 25; it.wvy += Math.sin(a) * k * 25; }
+    const a = Math.random() * Math.PI * 2, c = Math.cos(a), s = Math.sin(a);
+    if (it.move === 'roll') { it.vx += c * k; it.vy += s * k; }
+    for (const w of it.sw) { w.vx += c * k * 25 * w.kick; w.vy += s * k * 25 * w.kick; }
   }
   if (navigator.vibrate) { try { navigator.vibrate(15); } catch (_) {} }
   updateHud();
-  if (steps >= GOAL) finish(true, 'こぼさずに運びきりました。');
+  if (steps >= GOAL) finish(true, `${set.name}を運びきりました。`);
 }
 
 function updateHud() {
   $('stepNum').textContent = steps;
   [...dotsEl.children].forEach((d, i) => d.classList.toggle('on', i < steps));
-  const bar = $('spillBar');
-  bar.style.width = Math.min(spill, 1) * 100 + '%';
-  bar.classList.toggle('hot', spill > 0.6);
+  const bar = $('meterBar');
+  bar.style.width = Math.min(danger, 1) * 100 + '%';
+  bar.classList.toggle('warn', danger > 0.5 && danger <= 0.8);
+  bar.classList.toggle('hot', danger > 0.8);
 }
 
 // ===== 開始フロー =====
@@ -330,7 +376,8 @@ $('btnRetry').addEventListener('click', () => startCalib());
 $('btnBack').addEventListener('click', () => { state = 'title'; hud.hidden = true; $('debugHint').hidden = true; show(scTitle); });
 
 function startCalib() {
-  diffKey = document.querySelector('input[name=diff]:checked').value;
+  const id = document.querySelector('input[name=set]:checked').value;
+  set = SETS.find((s) => s.id === id);
   setup();
   state = 'calib'; hud.hidden = false; show(scCalib);
   $('debugHint').hidden = !debug;
@@ -352,6 +399,12 @@ function startCalib() {
   }, 800);
 }
 
+function lose(msg) {
+  if (state !== 'play') return;
+  state = 'falling';
+  setTimeout(() => finish(false, msg), 450);
+}
+
 function finish(clear, msg) {
   if (state !== 'play' && state !== 'falling') return;
   state = clear ? 'clear' : 'over';
@@ -360,18 +413,21 @@ function finish(clear, msg) {
   $('resTitle').textContent = clear ? 'クリア！' : 'ゲームオーバー';
   $('resTitle').style.color = clear ? 'var(--gold)' : 'var(--danger)';
   $('resMsg').textContent = msg;
-  const rows = [['難易度', cfg.name], ['歩数', `${steps} / ${GOAL}歩`], ['タイム', sec.toFixed(1) + '秒'], ['最大の傾き', maxTilt.toFixed(1) + '°']];
-  if (items.some((it) => it.type === 'cup')) rows.push(['こぼれた水', Math.round(Math.min(spill, 1) * 100) + '%']);
+  const rows = [['載せたもの', set.name], ['歩数', `${steps} / ${GOAL}歩`], ['タイム', sec.toFixed(1) + '秒'], ['最大の傾き', maxTilt.toFixed(1) + '°']];
   $('resStats').replaceChildren(...rows.flatMap(([k, v]) => {
     const dt = document.createElement('dt'); dt.textContent = k;
     const dd = document.createElement('dd'); dd.textContent = v;
     return [dt, dd];
   }));
-  setTimeout(() => show(scResult), clear ? 300 : 700);
+  setTimeout(() => show(scResult), clear ? 300 : 300);
 }
 
 // ===== PCデバッグ操作 =====
-cv.addEventListener('pointerdown', (e) => { if (debug) { dbg.drag = { x: e.clientX, y: e.clientY }; cv.setPointerCapture(e.pointerId); } });
+cv.addEventListener('pointerdown', (e) => {
+  if (!debug) return;
+  dbg.drag = { x: e.clientX, y: e.clientY };
+  try { cv.setPointerCapture(e.pointerId); } catch (_) {}
+});
 cv.addEventListener('pointermove', (e) => {
   if (!debug || !dbg.drag) return;
   const R = Math.min(innerWidth, innerHeight) * 0.4;
@@ -394,6 +450,7 @@ function targetTiltDeg() {
 }
 
 function physics(dt) {
+  clock += dt;
   // 1) 傾き：ローパスで歩行の細かい揺れを落とし、デッドゾーンで手ぶれを無視
   const t = targetTiltDeg();
   const sx = Math.sin(t.gx * Math.PI / 180), sy = Math.sin(t.gy * Math.PI / 180);
@@ -401,48 +458,68 @@ function physics(dt) {
   tilt.x += (sx - tilt.x) * k; tilt.y += (sy - tilt.y) * k;
   const mag = Math.hypot(tilt.x, tilt.y);
   maxTilt = Math.max(maxTilt, Math.asin(Math.min(mag, 1)) * 180 / Math.PI);
-  const dead = Math.sin(cfg.dead * Math.PI / 180);
+  const dead = Math.sin(set.dead * Math.PI / 180);
   const eff = mag > dead ? (mag - dead) / mag : 0;
+  eTilt.x = tilt.x * eff; eTilt.y = tilt.y * eff;
   // お盆の面に沿った重力成分（m/s²）
-  const gx = tilt.x * eff * G * cfg.gScale, gy = tilt.y * eff * G * cfg.gScale;
+  const gx = eTilt.x * G * set.gScale, gy = eTilt.y * G * set.gScale;
+  let dmax = 0;
 
   for (const it of items) {
     if (it.fall >= 0) { it.fall += dt; continue; }
     const pvx = it.vx, pvy = it.vy;
-    if (it.type === 'ball') {
+    if (it.move === 'roll') {
       // 転がる球：加速度は 5/7 g sinθ、転がり抵抗は速度に比例
-      it.vx += (gx * 5 / 7 - cfg.ballDamp * it.vx) * dt;
-      it.vy += (gy * 5 / 7 - cfg.ballDamp * it.vy) * dt;
+      it.vx += (gx * 5 / 7 - it.damp * it.vx) * dt;
+      it.vy += (gy * 5 / 7 - it.damp * it.vy) * dt;
     } else {
-      // コップ：静止摩擦を超えるまで動かず、動いたら動摩擦で減速
-      const sp = Math.hypot(it.vx, it.vy), gm = Math.hypot(gx, gy);
-      if (sp < 1e-3 && gm < CUP_MU_S * G) { it.vx = it.vy = 0; }
+      // 静止摩擦を超えるまで動かず、動いたら動摩擦（静止摩擦の7割）で減速
+      const sp = Math.hypot(it.vx, it.vy), gm = Math.hypot(gx, gy), muS = it.mu * G, muK = it.mu * 0.7 * G;
+      if (sp < 1e-3 && gm < muS) { it.vx = it.vy = 0; }
       else {
         const fx = sp > 1e-3 ? it.vx / sp : gx / (gm || 1), fy = sp > 1e-3 ? it.vy / sp : gy / (gm || 1);
-        let nvx = it.vx + (gx - CUP_MU_K * G * fx) * dt, nvy = it.vy + (gy - CUP_MU_K * G * fy) * dt;
-        if (sp > 1e-3 && nvx * it.vx + nvy * it.vy < 0 && gm < CUP_MU_S * G) { nvx = nvy = 0; }
+        let nvx = it.vx + (gx - muK * fx) * dt, nvy = it.vy + (gy - muK * fy) * dt;
+        if (sp > 1e-3 && nvx * it.vx + nvy * it.vy < 0 && gm < muS) { nvx = nvy = 0; }
         it.vx = nvx; it.vy = nvy;
       }
     }
     it.x += it.vx * dt; it.y += it.vy * dt;
     it.ax = (it.vx - pvx) / dt; it.ay = (it.vy - pvy) / dt;
 
-    // コップの水面：お盆の傾き＋コップの加速に追従するばね（行き過ぎて揺り返す）
-    if (it.type === 'cup') {
-      const tx = tilt.x - it.ax / G * 3, ty = tilt.y - it.ay / G * 3;
-      it.wvx += (SLOSH_W * SLOSH_W * (tx - it.wx) - 2 * SLOSH_Z * SLOSH_W * it.wvx) * dt;
-      it.wvy += (SLOSH_W * SLOSH_W * (ty - it.wy) - 2 * SLOSH_Z * SLOSH_W * it.wvy) * dt;
-      it.wx += it.wvx * dt; it.wy += it.wvy * dt;
-      const w = Math.hypot(it.wx, it.wy);
-      if (w > cfg.spillThr) {
-        spill += (w - cfg.spillThr) * 3.5 * dt;
-        if (Math.random() < 0.5) {
-          const ux = it.wx / w, uy = it.wy / w;
-          drops.push({ x: it.x + ux * it.r, y: it.y + uy * it.r, vx: ux * 0.15 + it.vx, vy: uy * 0.15 + it.vy, life: 1 });
-        }
+    // 揺れ（水面・傾いた塔・猫の眠り）：傾き＋揺さぶりに、ばねのように遅れて追従する
+    for (const w of it.sw) {
+      const om = 2 * Math.PI * w.freq;
+      const tx = eTilt.x * w.gain - it.ax / G * w.accG, ty = eTilt.y * w.gain - it.ay / G * w.accG;
+      w.vx += (om * om * (tx - w.x) - 2 * w.zeta * om * w.vx) * dt;
+      w.vy += (om * om * (ty - w.y) - 2 * w.zeta * om * w.vy) * dt;
+      if (it.boil) { // 沸騰：泡で水面がランダムに揺れる
+        const sq = Math.sqrt(dt);
+        w.vx += (Math.random() - 0.5) * it.boil * sq; w.vy += (Math.random() - 0.5) * it.boil * sq;
+      }
+      w.x += w.vx * dt; w.y += w.vy * dt;
+      const r = Math.hypot(w.x, w.y) / w.thr;
+      if (w.mode === 'topple') {
+        dmax = Math.max(dmax, r);
+        if (r > 1) lose(w.fail);
+      } else if (w.mode === 'spill') {
+        if (r > 1) {
+          w.acc += dt / SPILL_TIME * (1 + (r - 1) * 4);
+          if (Math.random() < 0.4) {
+            const ux = w.x / (r * w.thr), uy = w.y / (r * w.thr);
+            drops.push({ x: it.x + ux * it.r, y: it.y + uy * it.r, vx: ux * 0.15 + it.vx, vy: uy * 0.15 + it.vy, life: 1, kind: it.kind });
+          }
+        } else w.acc = Math.max(0, w.acc - dt);
+        dmax = Math.max(dmax, Math.min(r, 1) * 0.85, w.acc);
+        if (w.acc >= 1) lose(w.fail);
+      } else if (w.mode === 'wake') {
+        if (r > 1) w.acc += dt / WAKE_TIME * r;
+        else w.acc = Math.max(0, w.acc - dt * 0.08);
+        dmax = Math.max(dmax, w.acc);
+        if (w.acc >= 1) lose(w.fail);
       }
     }
   }
+  danger = dmax;
 
   // 2) 物体どうしの衝突（円同士、軽く弾む）
   for (let i = 0; i < items.length; i++) for (let j = i + 1; j < items.length; j++) {
@@ -463,19 +540,16 @@ function physics(dt) {
 
   // 3) お盆の縁から中心がはみ出したら落下
   for (const it of items) {
-    if (it.fall < 0 && Math.hypot(it.x, it.y) > cfg.trayR) {
+    if (it.fall < 0 && Math.hypot(it.x, it.y) > TRAY_R) {
       it.fall = 0;
-      if (state === 'play') {
-        state = 'falling';
-        setTimeout(() => finish(false, it.type === 'cup' ? 'コップがお盆から落ちてしまいました。' : 'ボールがお盆から転がり落ちました。'), 450);
-      }
+      lose(`${it.name}がお盆から落ちました。`);
     }
   }
 
-  // 4) こぼれた水滴
-  for (const d of drops) { d.x += d.vx * dt; d.y += d.vy * dt; d.vx *= 0.9; d.vy *= 0.9; d.life -= dt * 0.6; }
+  // 4) こぼれた液体
+  for (const d of drops) { d.x += d.vx * dt; d.y += d.vy * dt; d.vx *= 0.9; d.vy *= 0.9; d.life -= dt * 0.5; }
+  if (drops.length > 300) drops.splice(0, drops.length - 300);
   drops = drops.filter((d) => d.life > 0);
-  if (spill >= 1 && state === 'play') finish(false, '水がこぼれすぎました。');
 }
 
 // ===== 描画 =====
@@ -487,10 +561,216 @@ function resize() {
 }
 addEventListener('resize', resize); resize();
 
+const TAU = Math.PI * 2;
+function circle(x, y, r, fill) { ctx.fillStyle = fill; ctx.beginPath(); ctx.arc(x, y, Math.max(r, 0), 0, TAU); ctx.fill(); }
+function ringStroke(x, y, r, color, lw) { ctx.strokeStyle = color; ctx.lineWidth = lw; ctx.beginPath(); ctx.arc(x, y, Math.max(r, 0), 0, TAU); ctx.stroke(); }
+// 揺れの状態を「しきい値=1」に正規化したベクトル
+function lean(it, mode) {
+  const w = it.sw.find((s) => s.mode === mode);
+  if (!w) return { x: 0, y: 0, r: 0 };
+  return { x: w.x / w.thr, y: w.y / w.thr, r: Math.hypot(w.x, w.y) / w.thr };
+}
+// 液面：寄っている側を明るく描き、しきい値を超えたら赤い縁
+function liquid(it, x, y, r, base, hi) {
+  const l = lean(it, 'spill');
+  const ox = Math.max(-1, Math.min(1, l.x)), oy = Math.max(-1, Math.min(1, l.y));
+  circle(x, y, r, base);
+  ctx.save();
+  ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.clip();
+  const gx = x + ox * r * 0.7, gy = y + oy * r * 0.7;
+  const g = ctx.createRadialGradient(gx, gy, 0, gx, gy, r * 1.1);
+  g.addColorStop(0, hi); g.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = g; ctx.fillRect(x - r, y - r, r * 2, r * 2);
+  ctx.restore();
+  if (l.r > 1) ringStroke(x, y, r + 2, '#ff6a4d', 3);
+  return l;
+}
+
+const DRAW = {
+  ball(it, x, y, r) {
+    const g = ctx.createRadialGradient(x - r * .35, y - r * .35, r * .1, x, y, r);
+    g.addColorStop(0, '#ffffff'); g.addColorStop(1, '#cfc7b0');
+    circle(x, y, r, g);
+  },
+  cup(it, x, y, r) {
+    circle(x, y, r, '#ece6d6');
+    liquid(it, x, y, r * .86, '#3f86c0', '#a9dcff');
+  },
+  wine(it, x, y, r) {
+    const t = lean(it, 'topple');
+    ctx.globalAlpha *= 0.6; circle(x, y, r * .9, '#dfe7ec'); ctx.globalAlpha /= 0.6; // 台座
+    const bx = x + t.x * r * .5, by = y + t.y * r * .5;
+    circle(bx, by, r, 'rgba(230,240,245,.55)');
+    ringStroke(bx, by, r, 'rgba(255,255,255,.8)', 1.5);
+    liquid(it, bx, by, r * .8, '#6e0f2c', '#c8466a');
+  },
+  champagne(it, x, y, r) {
+    const t = lean(it, 'topple'), l = lean(it, 'spill');
+    const gr = r / 4.4;
+    for (let tier = 0; tier < 4; tier++) {
+      const n = 4 - tier, off = tier / 3;
+      const cx = x + t.x * r * .45 * off, cy = y + t.y * r * .45 * off;
+      for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) {
+        const gx = cx + (i - (n - 1) / 2) * gr * 2.05, gy = cy + (j - (n - 1) / 2) * gr * 2.05;
+        circle(gx, gy, gr, 'rgba(240,236,220,.85)');
+        circle(gx + Math.max(-1, Math.min(1, l.x)) * gr * .25, gy + Math.max(-1, Math.min(1, l.y)) * gr * .25, gr * .72, l.r > 1 ? '#f4dc8a' : '#e3b94a');
+      }
+    }
+    if (l.r > 1) ringStroke(x, y, r + 3, '#ff6a4d', 3);
+  },
+  books(it, x, y, r) {
+    const t = lean(it, 'topple');
+    const w = r * 1.6, h = r * 1.15;
+    const cols = ['#2d4f7c', '#8a2f2a', '#3d6b47', '#d1b26a', '#5a3d6e'];
+    for (let i = 0; i < 20; i++) {
+      const f = i / 19, ox = t.x * r * .55 * f, oy = t.y * r * .55 * f;
+      ctx.fillStyle = cols[i % cols.length];
+      ctx.fillRect(x - w / 2 + ox, y - h / 2 + oy, w, h);
+      ctx.strokeStyle = 'rgba(255,255,255,.25)'; ctx.lineWidth = 1;
+      ctx.strokeRect(x - w / 2 + ox + .5, y - h / 2 + oy + .5, w - 1, h - 1);
+    }
+    const ox = t.x * r * .55, oy = t.y * r * .55;
+    ctx.fillStyle = 'rgba(255,255,255,.75)';
+    ctx.fillRect(x - w * .3 + ox, y - h * .25 + oy, w * .6, h * .12);
+  },
+  pancake(it, x, y, r) {
+    const t = lean(it, 'topple');
+    circle(x, y, r * 1.15, '#f2efe8'); // お皿
+    for (let i = 0; i < 8; i++) {
+      const f = i / 7, ox = t.x * r * .5 * f, oy = t.y * r * .5 * f;
+      circle(x + ox, y + oy, r * .95, '#a8682a');
+      circle(x + ox, y + oy, r * .88, '#d79a4a');
+    }
+    const ox = t.x * r * .5, oy = t.y * r * .5;
+    ctx.globalAlpha *= .7; circle(x + ox + r * .1, y + oy + r * .05, r * .55, '#7a3e10'); ctx.globalAlpha /= .7;
+    ctx.fillStyle = '#f6e27a'; ctx.fillRect(x + ox - r * .18, y + oy - r * .18, r * .36, r * .3);
+  },
+  cards(it, x, y, r) {
+    const t = lean(it, 'topple');
+    const cw = r * .42, ch = r * .62;
+    for (let tier = 0; tier < 4; tier++) {
+      // 少し斜め上から見たように、上の段ほど奥（画面の上）にずらして重ねる
+      const n = 4 - tier, f = tier / 3;
+      const cx = x + t.x * r * .5 * f, cy = y + t.y * r * .5 * f + (1.5 - tier) * ch * .45;
+      for (let i = 0; i < n; i++) {
+        const px = cx + (i - (n - 1) / 2) * cw * 1.08 - cw / 2, py = cy - ch / 2;
+        ctx.fillStyle = '#f7f4ec'; ctx.fillRect(px, py, cw, ch);
+        ctx.strokeStyle = '#9b2c2c'; ctx.lineWidth = 1.5; ctx.strokeRect(px + 2, py + 2, cw - 4, ch - 4);
+        if (tier === 3) { ctx.fillStyle = '#9b2c2c'; ctx.font = `${Math.round(ch * .4)}px sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('♥', px + cw / 2, py + ch / 2); }
+      }
+    }
+  },
+  soup(it, x, y, r) {
+    circle(x, y, r, '#4a1712');
+    const l = liquid(it, x, y, r * .84, '#9c6a33', '#e0b070');
+    const ox = Math.max(-1, Math.min(1, l.x)) * r * .2, oy = Math.max(-1, Math.min(1, l.y)) * r * .2;
+    ctx.fillStyle = '#f5f1e4'; ctx.fillRect(x - r * .35 + ox, y - r * .1 + oy, r * .22, r * .22); ctx.fillRect(x + r * .1 + ox, y + r * .15 + oy, r * .22, r * .22);
+    circle(x + r * .15 + ox, y - r * .3 + oy, r * .14, '#2f5a2a');
+  },
+  milk(it, x, y, r) {
+    const t = lean(it, 'topple');
+    ringStroke(x, y, r * .95, 'rgba(255,255,255,.5)', 1.5); // 底
+    const bx = x + t.x * r * .9, by = y + t.y * r * .9;
+    circle(bx, by, r, '#fbfbf7');
+    circle(bx, by, r * .7, '#e9e2cf');
+    ringStroke(bx, by, r * .85, '#3a6ea8', 2);
+  },
+  rice(it, x, y, r) {
+    circle(x, y, r, '#f0ece4'); ringStroke(x, y, r * .9, '#3a6ea8', 1.5);
+    circle(x, y, r * .78, '#fbfaf5');
+    ctx.fillStyle = '#e6e1d4';
+    for (let i = 0; i < 9; i++) { const a = i * 2.4, d = r * .55 * ((i % 3) + 1) / 3; ctx.fillRect(x + Math.cos(a) * d, y + Math.sin(a) * d, 2.5, 1.5); }
+  },
+  plate(it, x, y, r) {
+    circle(x, y, r, '#f6f4ee'); ringStroke(x, y, r * .82, '#ddd8cc', 1);
+    ctx.fillStyle = '#6b3a1e'; ctx.beginPath(); ctx.ellipse(x - r * .15, y, r * .42, r * .3, -.3, 0, TAU); ctx.fill();
+    ctx.fillStyle = 'rgba(120,40,20,.7)'; ctx.beginPath(); ctx.ellipse(x - r * .15, y - r * .05, r * .28, r * .15, -.3, 0, TAU); ctx.fill();
+    circle(x + r * .45, y - r * .2, r * .13, '#3f8a3a'); circle(x + r * .5, y + r * .05, r * .12, '#4c9b45');
+    ctx.fillStyle = '#e9b949'; ctx.fillRect(x + r * .25, y + r * .3, r * .35, r * .08); ctx.fillRect(x + r * .2, y + r * .42, r * .3, r * .08);
+  },
+  pot(it, x, y, r) {
+    ctx.fillStyle = '#5a6066';
+    ctx.fillRect(x - r * 1.28, y - r * .14, r * .32, r * .28); ctx.fillRect(x + r * .96, y - r * .14, r * .32, r * .28); // 取っ手
+    circle(x, y, r, '#a5adb3'); circle(x, y, r * .92, '#6f787d');
+    liquid(it, x, y, r * .86, '#9cc9df', '#e8f6ff');
+    // 泡と湯気
+    for (let i = 0; i < 10; i++) {
+      const a = i * 2.39 + clock * 0.7, d = r * .7 * ((i * 37 % 10) / 10), p = (clock * 2 + i * .37) % 1;
+      ringStroke(x + Math.cos(a) * d, y + Math.sin(a) * d, 1.5 + p * 4, `rgba(255,255,255,${.7 * (1 - p)})`, 1.2);
+    }
+    steam(x, y - r * .2, r);
+  },
+  oden(it, x, y, r) {
+    circle(x, y, r, '#3a2a20'); ringStroke(x, y, r * .93, '#8a2f2a', 2);
+    const l = liquid(it, x, y, r * .82, '#b07a2e', '#f0c97a');
+    const ox = Math.max(-1, Math.min(1, l.x)) * r * .15, oy = Math.max(-1, Math.min(1, l.y)) * r * .15;
+    const rot = it.seed * 2.1;
+    const p = (a, d) => [x + ox + Math.cos(a + rot) * d, y + oy + Math.sin(a + rot) * d];
+    let [px, py] = p(0, r * .35); circle(px, py, r * .28, '#f3e2b0'); ringStroke(px, py, r * .2, 'rgba(176,122,46,.5)', 1); // 大根
+    [px, py] = p(2.2, r * .38); ctx.fillStyle = '#d8b07a'; ctx.beginPath(); ctx.ellipse(px, py, r * .2, r * .15, rot, 0, TAU); ctx.fill(); // 卵
+    [px, py] = p(4.2, r * .36); ctx.fillStyle = '#7d7466'; ctx.beginPath(); // こんにゃく
+    ctx.moveTo(px, py - r * .22); ctx.lineTo(px + r * .2, py + r * .14); ctx.lineTo(px - r * .2, py + r * .14); ctx.closePath(); ctx.fill();
+    steam(x, y - r * .2, r * .8);
+  },
+  pencil(it, x, y, r, S) {
+    const t = lean(it, 'topple');
+    const L = S * 0.04; // 傾いたときに見える長さの最大値
+    const tx = x + t.x * L, ty = y + t.y * L;
+    circle(x + 4, y + 6, 6, 'rgba(0,0,0,.3)');
+    circle(x, y, 2.5, '#2b2b2b');
+    ctx.strokeStyle = '#e8b830'; ctx.lineWidth = 12; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(tx, ty); ctx.stroke();
+    // 真上から見た鉛筆：黄色い六角の軸、金具、消しゴム
+    ctx.fillStyle = '#e8b830'; ctx.beginPath();
+    for (let i = 0; i < 6; i++) { const a = i * Math.PI / 3; ctx.lineTo(tx + Math.cos(a) * 9, ty + Math.sin(a) * 9); }
+    ctx.closePath(); ctx.fill();
+    circle(tx, ty, 6.5, '#c9c9c9');
+    circle(tx, ty, 5, '#e88a9a');
+  },
+  cat(it, x, y, r) {
+    const w = it.sw[0], awake = w.acc;
+    const twitch = awake > .4 ? Math.sin(clock * 20) * awake * 2 : 0;
+    // しっぽ
+    ctx.strokeStyle = '#c27a3a'; ctx.lineWidth = r * .22; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.arc(x, y, r * .95, 1.2, 3.4); ctx.stroke();
+    // 体
+    circle(x, y, r * .85, '#e3a25c');
+    ctx.strokeStyle = '#c27a3a'; ctx.lineWidth = 3;
+    for (let i = 0; i < 4; i++) { ctx.beginPath(); ctx.arc(x - r * .1, y + r * .1, r * (.3 + i * .14), 3.6, 5.2); ctx.stroke(); }
+    // 頭と耳
+    const hx = x + r * .45, hy = y - r * .35, hr = r * .45;
+    ctx.fillStyle = '#e3a25c';
+    ctx.beginPath(); ctx.moveTo(hx - hr * .8, hy - hr * .3); ctx.lineTo(hx - hr * .55 + twitch, hy - hr * 1.15); ctx.lineTo(hx - hr * .1, hy - hr * .75); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(hx + hr * .1, hy - hr * .75); ctx.lineTo(hx + hr * .6 - twitch, hy - hr * 1.15); ctx.lineTo(hx + hr * .85, hy - hr * .3); ctx.fill();
+    circle(hx, hy, hr, '#e3a25c');
+    // 目（目覚めが近いと半開き）
+    ctx.strokeStyle = '#3a2412'; ctx.lineWidth = 2;
+    for (const ex of [-.35, .35]) {
+      ctx.beginPath();
+      if (awake > .7) { circle(hx + ex * hr, hy, hr * .12, '#3a2412'); }
+      else { ctx.arc(hx + ex * hr, hy - hr * .05, hr * .18, .3, Math.PI - .3); ctx.stroke(); }
+    }
+    circle(hx, hy + hr * .25, hr * .08, '#c45a6a');
+    // 寝息
+    ctx.fillStyle = `rgba(255,255,255,${awake > .7 ? 0 : .85})`;
+    ctx.font = `700 ${Math.round(r * .35)}px "Zen Maru Gothic", sans-serif`; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+    const z = (clock * .6) % 1;
+    ctx.fillText('z', hx + hr * .9, hy - hr * (1 + z)); ctx.fillText('Z', hx + hr * 1.3, hy - hr * (1.6 + z));
+    if (awake > .7) { ctx.fillStyle = '#ff6a4d'; ctx.fillText('！？', hx + hr * .9, hy - hr * 1.2); }
+  },
+};
+function steam(x, y, r) {
+  for (let i = 0; i < 3; i++) {
+    const p = (clock * .5 + i / 3) % 1;
+    ctx.fillStyle = `rgba(255,255,255,${.22 * (1 - p)})`;
+    ctx.beginPath(); ctx.arc(x + Math.sin(clock * 1.5 + i * 2) * r * .3, y - p * r * 1.2, r * (.3 + p * .4), 0, TAU); ctx.fill();
+  }
+}
+const DROP_COLOR = { cup: '#4f9fd6', wine: '#8a1638', champagne: '#e3b94a', soup: '#9c6a33', pot: '#cfe8f5', oden: '#b07a2e' };
+
 function drawTable() {
   ctx.fillStyle = '#3d4a33'; ctx.fillRect(0, 0, W, H);
-  // 畳の目
-  ctx.strokeStyle = '#46553a'; ctx.lineWidth = 1;
+  ctx.strokeStyle = '#46553a'; ctx.lineWidth = 1; // 畳の目
   for (let y = 0; y < H; y += 6) { ctx.beginPath(); ctx.moveTo(0, y + .5); ctx.lineTo(W, y + .5); ctx.stroke(); }
 }
 
@@ -499,37 +779,25 @@ function draw() {
   drawTable();
   const cx = W / 2, cy = H * 0.56;
   const Rpx = Math.min(W * 0.46, H * 0.36);
-  const S = Rpx / cfg.trayR; // m → px
+  const S = Rpx / TRAY_R; // m → px
   const tx = tilt.x, ty = tilt.y;
 
-  // お盆の影（傾きと逆側にずれる）
-  ctx.fillStyle = 'rgba(0,0,0,.35)';
-  ctx.beginPath(); ctx.arc(cx - tx * 60, cy - ty * 60 + 10, Rpx * 1.09, 0, Math.PI * 2); ctx.fill();
-  // 縁（黒漆＋金線）
-  ctx.fillStyle = '#1f1915';
-  ctx.beginPath(); ctx.arc(cx, cy, Rpx * 1.09, 0, Math.PI * 2); ctx.fill();
-  ctx.strokeStyle = '#d6b25e'; ctx.lineWidth = 2;
-  ctx.beginPath(); ctx.arc(cx, cy, Rpx * 1.075, 0, Math.PI * 2); ctx.stroke();
-  // 面（朱塗り）
+  // お盆の影・縁（黒漆＋金線）・面（朱塗り）
+  circle(cx - tx * 60, cy - ty * 60 + 10, Rpx * 1.09, 'rgba(0,0,0,.35)');
+  circle(cx, cy, Rpx * 1.09, '#1f1915');
+  ringStroke(cx, cy, Rpx * 1.075, '#d6b25e', 2);
   const g = ctx.createRadialGradient(cx + tx * Rpx * .6, cy + ty * Rpx * .6, Rpx * .1, cx, cy, Rpx);
   g.addColorStop(0, '#c4523b'); g.addColorStop(1, '#8e2f20');
-  ctx.fillStyle = g;
-  ctx.beginPath(); ctx.arc(cx, cy, Rpx, 0, Math.PI * 2); ctx.fill();
+  circle(cx, cy, Rpx, g);
 
   // 縁に近い物があれば危険表示
-  let danger = 0;
-  for (const it of items) if (it.fall < 0) danger = Math.max(danger, (Math.hypot(it.x, it.y) / cfg.trayR - 0.7) / 0.3);
-  if (danger > 0) {
-    ctx.strokeStyle = `rgba(255,106,77,${Math.min(danger, 1) * 0.9})`;
-    ctx.lineWidth = 6;
-    ctx.beginPath(); ctx.arc(cx, cy, Rpx - 3, 0, Math.PI * 2); ctx.stroke();
-  }
+  let edge = 0;
+  for (const it of items) if (it.fall < 0) edge = Math.max(edge, (Math.hypot(it.x, it.y) / TRAY_R - 0.7) / 0.3);
+  if (edge > 0) ringStroke(cx, cy, Rpx - 3, `rgba(255,106,77,${Math.min(edge, 1) * 0.9})`, 6);
 
-  // 水滴
-  ctx.fillStyle = '#4f9fd6';
   for (const d of drops) {
     ctx.globalAlpha = Math.max(d.life, 0) * 0.8;
-    ctx.beginPath(); ctx.arc(cx + d.x * S, cy + d.y * S, 3, 0, Math.PI * 2); ctx.fill();
+    circle(cx + d.x * S, cy + d.y * S, 3, DROP_COLOR[d.kind] || '#4f9fd6');
   }
   ctx.globalAlpha = 1;
 
@@ -538,34 +806,8 @@ function draw() {
     if (sc <= 0) continue;
     const x = cx + it.x * S, y = cy + it.y * S, r = it.r * S * sc;
     ctx.globalAlpha = sc;
-    // 影
-    ctx.fillStyle = 'rgba(0,0,0,.3)';
-    ctx.beginPath(); ctx.arc(x - tx * 20 + 3, y - ty * 20 + 5, r, 0, Math.PI * 2); ctx.fill();
-    if (it.type === 'ball') {
-      const bg = ctx.createRadialGradient(x - r * .35, y - r * .35, r * .1, x, y, r);
-      bg.addColorStop(0, '#ffffff'); bg.addColorStop(1, '#cfc7b0');
-      ctx.fillStyle = bg;
-      ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
-    } else {
-      // 湯のみ（白い縁）と水面
-      ctx.fillStyle = '#ece6d6';
-      ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#2f6f9c';
-      ctx.beginPath(); ctx.arc(x, y, r * .82, 0, Math.PI * 2); ctx.fill();
-      // 水面の傾き＝水が寄っている方向に明るい部分を描く
-      const w = Math.hypot(it.wx, it.wy), over = w > cfg.spillThr;
-      const ox = Math.max(-1, Math.min(1, it.wx / cfg.spillThr)), oy = Math.max(-1, Math.min(1, it.wy / cfg.spillThr));
-      ctx.save();
-      ctx.beginPath(); ctx.arc(x, y, r * .82, 0, Math.PI * 2); ctx.clip();
-      const wg = ctx.createRadialGradient(x + ox * r * .6, y + oy * r * .6, 0, x + ox * r * .6, y + oy * r * .6, r * 1.1);
-      wg.addColorStop(0, over ? '#bfe6ff' : '#7cc0ec'); wg.addColorStop(1, 'rgba(79,159,214,0)');
-      ctx.fillStyle = wg; ctx.fillRect(x - r, y - r, r * 2, r * 2);
-      ctx.restore();
-      if (over) {
-        ctx.strokeStyle = '#ff6a4d'; ctx.lineWidth = 3;
-        ctx.beginPath(); ctx.arc(x, y, r + 3, 0, Math.PI * 2); ctx.stroke();
-      }
-    }
+    if (it.kind !== 'pencil') circle(x - tx * 20 + 3, y - ty * 20 + 5, r, 'rgba(0,0,0,.3)'); // 影
+    DRAW[it.kind](it, x, y, r, S * sc);
     ctx.globalAlpha = 1;
   }
 
@@ -578,14 +820,17 @@ function draw() {
 // ===== ループ =====
 let last = performance.now();
 function loop(now) {
-  let dt = Math.min((now - last) / 1000, 0.05);
+  const dt = Math.max(0, Math.min((now - last) / 1000, 0.05));
   last = now;
-  if (state === 'play' || state === 'falling') {
+  if (dt <= 0) { /* 同じ時刻のフレームは物理を進めない（加速度の 0 除算を防ぐ） */ }
+  else if (state === 'play' || state === 'falling') {
     const n = 4;
     for (let i = 0; i < n; i++) physics(dt / n);
     updateHud();
+  } else {
+    clock += dt;
   }
-  draw();
+  try { draw(); } catch (e) { console.error(e); } // 描画エラーでゲームループを止めない
   requestAnimationFrame(loop);
 }
 setup();
